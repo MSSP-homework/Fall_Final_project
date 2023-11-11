@@ -1,0 +1,78 @@
+---
+title: "Products of Our Environment"
+author: "Amie Thomas"
+date: 11/7/2023
+format: pdf
+include-in-header:
+      text: |
+        \addtokomafont{disposition}{\rmfamily}
+editor: visual
+---
+
+# Project Proposal
+
+### 12th December 2023
+
+## Career Goal
+
+Conduct social research that identifies prevalent issues within communities and discerns patterns that can inform policy improvements aimed at addressing the needs of its residents. I plan to leverage insights from community development initiatives, to create targeted and effective policies, fostering positive change and support for those in need. The "Products of Our Environment" project aligns with my career goals as evidenced below.
+
+## Overview
+
+A neighborhood is conceptualized as a geographically defined and socially interconnected community where individuals share common physical spaces and social ties. Neighborhoods are not merely geographic entities; they represent dynamic social systems that shape and are shaped by the interactions of their residents. The characteristics of a neighborhood, including its socio-economic status, cultural diversity, and built environment, play a crucial role in influencing personal development. The quality of schools, accessibility to community resources, and the overall social fabric impact individuals' opportunities for education, socialization, and exposure to diverse experiences. These neighborhood attributes can significantly influence an individual's cognitive and emotional development, social networks, and access to resources, ultimately shaping their perspectives, aspirations, and life outcomes. Understanding neighborhood dynamics provides valuable insights into the complexities of human development within the broader context of community life.
+
+This projects seeks to better understand the role of neighborhood amenities (i.e. libraries, casinos, amusement parks, liquor stores, etc.) on the educational outcomes of its members. The inspiration of the project is drawn from the *Bronfenbrenner Ecological Systems Theory* and the *Shaw and Mckay Social Disorganization Theory.* In summary, these theories contend that the environment in which you are raised shapes many aspects of your life. Prior predictions for the analysis are that neighborhoods with a higher number of vice businesses will have a lower number of highly educated residents. The inverse is believed to be true for neighborhoods with a high number of learning and entertainment centers.
+
+## Data Sources
+
+For this project I will be using four datasets from the National Neighborhood Data Archive (NaNDA). **\[https://nanda.isr.umich.edu/about-nanda/\]**
+
+#### Dataset 1
+
+Arts, Entertainment, and Recreation Organizations by Census Tract, United States, 2003-2017
+
+[*http://doi.org/10.3886/E115543V2*](http://doi.org/10.3886/E115543V2)
+
+Related publication/ Literature review
+
+-   Melendez, Robert, Philippa Clarke, Anam Khan, Iris Gomez-Lopez, Mao Li, and Megan Chenoweth. \"National Neighborhood Data Archive (NaNDA): Socioeconomic Status and Demographic Characteristics of Census Tracts, United States, 2008-2017.\" *ICPSR - Interuniversity Consortium for Political and Social Research*, 2020. https://doi.org/10.3886/E119451V1.
+
+#### Dataset 2
+
+Liquor, Tobacco, and Convenience Stores by Census Tract, United States, 2003-2017
+
+[*http://doi.org/10.3886/E123541V1*](http://doi.org/10.3886/E123541V1)
+
+-   Finlay, Jessica, Mao Li, Michael Esposito, Iris Gomez-Lopez, Anam Khan, Philippa Clarke, and Megan Chenoweth. \"National Neighborhood Data Archive (NaNDA): Liquor, Tobacco, and Convenience Stores by ZIP Code Tabulation Area, United States, 2003-2017.\" *ICPSR - Interuniversity Consortium for Political and Social Research*, 2020. https://doi.org/10.3886/E123542V1.
+
+#### Dataset 3
+
+School Counts by Census Tract, United States, 2000-2018
+
+[*http://doi.org/10.3886/E156024V1*](http://doi.org/10.3886/E156024V1)
+
+Related publication/ Literature review
+
+-   National Center for Education Statistics. \"Common Core of Data, School-Level Database. Education Data Portal (Version 0.9.0).\" Urban Institute, 2020. https://educationdata.urban.org/documentation/schools.html.
+
+#### Dataset 4
+
+Socioeconomic Status and Demographic Characteristics of Census Tracts, United States, 2008-2017
+
+*<http://doi.org/10.3886/E119451V2>.*
+
+Related publication/ Literature review
+
+-   Melendez, Robert, Philippa Clarke, Anam Khan, Iris Gomez-Lopez, Mao Li, and Megan Chenoweth. \"National Neighborhood Data Archive (NaNDA): Socioeconomic Status and Demographic Characteristics of ZIP Code Tabulation Areas, United States, 2008-2017.\" *ICPSR - Interuniversity Consortium for Political and Social Research*, 2020. https://doi.org/10.3886/E120462V1.
+
+\*\*The data sets will be joined by matching census tracts FIP codes and filtered for communities and years of interest (to be determined).
+
+### Additional literature
+
+*Ecological Systems Theory*
+
+DOI:[10.4135/9781483385198.n94](http://dx.doi.org/10.4135/9781483385198.n94)
+
+### Glossary
+
+Vice business - businesses that cater to activities that may be considered harmful or addictive.
