@@ -1,0 +1,134 @@
+---
+title: "test"
+author: "Amie Thomas"
+date: "2023-11-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(haven)
+library(tidyverse)
+```
+
+
+#load in dataset 
+```{r}
+art <- read_dta("nanda_artsentrec_tract_2003-2017_01P.dta") #art/entertainment
+```
+
+#use only 2017 because it has the most up to date information for analysis and also to make computation easier. Getting rid of uninformative columns
+```{r}
+art_17 <- art|>
+  filter(year == "2017")|>
+  select(tract_fips10, year, population, count_7111, popden_7111, count_7112, popden_7112, count_712, popden_712,
+         count_51912, popden_51912, count_7131, popden_7131, count_7132, popden_7132, count_7139, popden_7139, count_71394,
+         popden_71394)
+```
+
+#check for 0's and handle
+```{r}
+missing_values <- any(is.na(art_17))
+rows_with_missing <- art_17[!complete.cases(art_17), ]
+#some census tracts have a 0 population. Can't do anything with this information so best to remove
+#are these true 0's? Possible limitations in the data 
+
+art_17_filt <- art_17 |>
+  filter(population != 0) #no need for population of 0
+
+miss_again <- any(is.na(art_17_filt)) #no missing values now
+
+```
+
+```{r}
+Northeast (Region 1):
+# Connecticut: State Code - 09
+# Maine: State Code - 23
+# Massachusetts: State Code - 25
+# New Hampshire: State Code - 33
+# Rhode Island: State Code - 44
+# Vermont: State Code - 50
+# New Jersey: State Code - 34
+# New York: State Code - 36
+# Pennsylvania: State Code - 42
+
+
+Midwest (Region 2):
+# Illinois: State Code - 17
+# Indiana: State Code - 18
+# Michigan: State Code - 26
+# Ohio: State Code - 39
+# Wisconsin: State Code - 55
+# Iowa: State Code - 19
+# Kansas: State Code - 20
+# Minnesota: State Code - 27
+# Missouri: State Code - 29
+# Nebraska: State Code - 31
+# North Dakota: State Code - 38
+# South Dakota: State Code - 46
+Region Code: 2
+
+South (Region 3):
+# Delaware: State Code - 10
+# Florida: State Code - 12
+# Georgia: State Code - 13
+# Maryland: State Code - 24
+# North Carolina: State Code - 37
+# South Carolina: State Code - 45
+# Virginia: State Code - 51
+# West Virginia: State Code - 54
+# Alabama: State Code - 01
+# Kentucky: State Code - 21
+# Mississippi: State Code - 28
+# Tennessee: State Code - 47
+# Arkansas: State Code - 05
+# Louisiana: State Code - 22
+# Oklahoma: State Code - 40
+# Texas: State Code - 48
+
+West (Region 4)
+# Arizona: State Code - 04
+# Colorado: State Code - 08
+# Idaho: State Code - 16
+# Montana: State Code - 30
+# Nevada: State Code - 32
+# New Mexico: State Code - 35
+# Utah: State Code - 49
+# Wyoming: State Code - 56
+# Alaska: State Code - 02
+# California: State Code - 06
+# Hawaii: State Code - 15
+# Oregon: State Code - 41
+# Washington: State Code - 53
+```
+
+```{r}
+# southern_codes <- c(“10”, “12”, “13”, “24”, “37”, “45”, “51” , “54”“01”, “21”, “28”, “47”, “05”, “22”, “40”, “48”,
+# )  
+# test_2
+# 
+# your_data <- your_data %>%
+#   mutate(new_column = ifelse(column_name %in% specific_values, "Output Information", NA))
+
+###test
+get_census_region <- function(tract_fips10) {
+  prefix <- substr(tract_fips10, 1, 2)
+  if (prefix %in% tract_fips10) {
+    return("south")
+  } else {
+    return(NA)
+  }
+}
+
+# Create a new column 'census_region' using the function
+test_3 <- art_17_filt %>%
+  mutate(census_region = sapply(art_17_filt$tract_fips10, get_census_region))
+
+
+```
+
+
+
+
+
+
