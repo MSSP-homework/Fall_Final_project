@@ -103,6 +103,7 @@ miss_again <- any(is.na(art_17_filt)) #no missing values now
 ```
 
 ```{r}
+#match the state census tracts to census regions to easier sampling
 
 get_census_region <- function(code) {
   census_region_map <- c(
@@ -135,7 +136,7 @@ art_17_filt <- art_17_filt |>
 art_17_filt <- art_17_filt |>
   relocate(census_region, .after = tract_fips10)
 
-unknown_regions <- art_17_filt %>%
+unknown_regions <- art_17_filt |>
   filter(census_region == "Unknown")
 
 #all of the tract codes are matched to their respective regions. There are 179 unknowns which don't make sense since all of them should have a match. Upon further inspection, the issue is the code begininng with 11. There is no matching state for this. It turns out that this code is for Washington DC which is a federal district and not a state. 
@@ -146,6 +147,265 @@ unknown_regions <- art_17_filt %>%
 art_17_filt$census_region[startsWith(art_17_filt$tract_fips10, "11")] <- "South"
 
 ```
+
+
+#taking samples from each census region
+```{r}
+# set.seed(123)  # Setting seed for reproducibility
+# 
+# sampled_art <- art_17_filt |>
+#   group_by(census_region) |>
+#   sample_n(size = 1500, replace = FALSE) |>
+#   ungroup()
+
+#probably pull the samples after everything is matched
+```
+
+#load in dataset 
+```{r}
+vice <- read_dta("nanda_lqtbcon_tract_2003-2017_01P.dta") #liquor stores/tobacco 
+```
+
+#use only 2017 because it has the most up to date information for analysis and also to make computation easier. Getting rid of uninformative columns
+```{r}
+vice_17 <- vice|>
+  filter(year == "2017")|>
+  select(tract_fips10, year, population, count_4453, popden_4453, count_453991, popden_453991)
+```
+
+#check for 0's and handle
+```{r}
+missing_values_2 <- any(is.na(vice_17))
+rows_with_missing_2 <- vice_17[!complete.cases(vice_17), ]
+#some census tracts have a 0 population. Can't do anything with this information so best to remove
+#are these true 0's? Possible limitations in the data 
+
+vice_17_filt <- vice_17 |>
+  filter(population != 0) #no need for population of 0
+
+miss_again_2 <- any(is.na(vice_17_filt)) #no missing values now
+
+```
+
+
+```{r}
+#match the state census tracts to census regions to easier sampling
+
+get_census_region_2 <- function(code_2) {
+  census_region_map_2 <- c(
+    "10" = "South", "12" = "South", "13" = "South", "24" = "South", 
+    "37" = "South", "45" = "South", "51" = "South", "54" = "South", 
+    "01" = "South", "21" = "South", "28" = "South", "47" = "South", 
+    "05" = "South", "22" = "South", "40" = "South", "48" = "South", 
+    "09" = "Northeast", "23" = "Northeast", "25" = "Northeast", 
+    "33" = "Northeast", "44" = "Northeast", "50" = "Northeast", 
+    "34" = "Northeast", "36" = "Northeast", "42" = "Northeast", 
+    "17" = "Midwest", "18" = "Midwest", "26" = "Midwest", "39" = "Midwest", 
+    "55" = "Midwest", "19" = "Midwest", "20" = "Midwest", "27" = "Midwest", 
+    "29" = "Midwest", "31" = "Midwest", "38" = "Midwest", "46" = "Midwest", 
+    "04" = "West", "08" = "West", "16" = "West", "30" = "West", 
+    "32" = "West", "35" = "West", "49" = "West", "56" = "West", 
+    "02" = "West", "06" = "West", "15" = "West", "41" = "West", "53" = "West"
+  )
+  
+  region_2 <- census_region_map_2[substr(code_2, 1, 2)]
+  if (is.na(region_2)) {
+    region_2 <- "Unknown"  
+  }
+  
+  return(region_2)
+}
+
+vice_17_filt <- vice_17_filt |>
+  mutate(census_region = sapply(tract_fips10, get_census_region_2))
+
+vice_17_filt <- vice_17_filt |>
+  relocate(census_region, .after = tract_fips10)
+
+unknown_regions_2 <- vice_17_filt |>
+  filter(census_region == "Unknown")
+
+#all of the tract codes are matched to their respective regions. There are 179 unknowns which don't make sense since all of them should have a match. Upon further inspection, the issue is the code begininng with 11. There is no matching state for this. It turns out that this code is for Washington DC which is a federal district and not a state. 
+
+#we will change these unknowns to correspond with "south" to reflect the actual census region that it is a part of 
+
+# Update census_region for census tracts starting with "11" to be "South"
+vice_17_filt$census_region[startsWith(vice_17_filt$tract_fips10, "11")] <- "South"
+
+```
+
+#load in dataset 
+```{r}
+social_orgs <- read_dta("nanda_relcivsoc_tract_2003-2017_01P.dta") #social organization
+
+#use only 2017 because it has the most up to date information for analysis and also to make computation easier. Getting rid of uninformative columns
+```
+
+```{r}
+social_orgs_17 <- social_orgs|>
+  filter(year == "2017")|>
+  select(tract_fips10, year, population, count_8131, popden_8131, count_8134, popden_8134)
+```
+
+#check for 0's and handle
+```{r}
+missing_values_3 <- any(is.na(social_orgs_17))
+rows_with_missing_3 <- social_orgs_17[!complete.cases(social_orgs_17), ]
+#some census tracts have a 0 population. Can't do anything with this information so best to remove
+#are these true 0's? Possible limitations in the data 
+
+social_orgs_17_filt <- social_orgs_17 |>
+  filter(population != 0) #no need for population of 0
+
+miss_again_3 <- any(is.na(social_orgs_17_filt)) #no missing values now
+
+```
+
+
+```{r}
+#match the state census tracts to census regions to easier sampling
+
+get_census_region_3 <- function(code_3) {
+  census_region_map_3 <- c(
+    "10" = "South", "12" = "South", "13" = "South", "24" = "South", 
+    "37" = "South", "45" = "South", "51" = "South", "54" = "South", 
+    "01" = "South", "21" = "South", "28" = "South", "47" = "South", 
+    "05" = "South", "22" = "South", "40" = "South", "48" = "South", 
+    "09" = "Northeast", "23" = "Northeast", "25" = "Northeast", 
+    "33" = "Northeast", "44" = "Northeast", "50" = "Northeast", 
+    "34" = "Northeast", "36" = "Northeast", "42" = "Northeast", 
+    "17" = "Midwest", "18" = "Midwest", "26" = "Midwest", "39" = "Midwest", 
+    "55" = "Midwest", "19" = "Midwest", "20" = "Midwest", "27" = "Midwest", 
+    "29" = "Midwest", "31" = "Midwest", "38" = "Midwest", "46" = "Midwest", 
+    "04" = "West", "08" = "West", "16" = "West", "30" = "West", 
+    "32" = "West", "35" = "West", "49" = "West", "56" = "West", 
+    "02" = "West", "06" = "West", "15" = "West", "41" = "West", "53" = "West"
+  )
+  
+  region_3 <- census_region_map_3[substr(code_3, 1, 2)]
+  if (is.na(region_3)) {
+    region_3 <- "Unknown"  
+  }
+  
+  return(region_3)
+}
+
+social_orgs_17_filt <- social_orgs_17_filt |>
+  mutate(census_region = sapply(tract_fips10, get_census_region_3))
+
+social_orgs_17_filt <- social_orgs_17_filt |>
+  relocate(census_region, .after = tract_fips10)
+
+unknown_regions_3 <- social_orgs_17_filt |>
+  filter(census_region == "Unknown")
+
+#all of the tract codes are matched to their respective regions. There are 179 unknowns which don't make sense since all of them should have a match. Upon further inspection, the issue is the code begininng with 11. There is no matching state for this. It turns out that this code is for Washington DC which is a federal district and not a state. 
+
+#we will change these unknowns to correspond with "south" to reflect the actual census region that it is a part of 
+
+# Update census_region for census tracts starting with "11" to be "South"
+social_orgs_17_filt$census_region[startsWith(social_orgs_17_filt$tract_fips10, "11")] <- "South"
+
+```
+
+#load in dataset 
+```{r}
+ses <- read_dta("nanda_ses_tract_2008-2017_04P.dta") #ses
+
+#use only 2017 because it has the most up to date information for analysis and also to make computation easier. Getting rid of uninformative columns
+```
+
+```{r}
+ses_select <- ses|>
+  select(tract_fips10, totpop13_17, ped1_13_17, ped2_13_17, ped3_13_17)
+```
+
+#check for 0's and handle
+```{r}
+missing_values_4 <- any(is.na(ses_select))
+rows_with_missing_4 <- ses_select[!complete.cases(ses_select), ]
+#some census tracts have a 0 population. Can't do anything with this information so best to remove
+#are these true 0's? Possible limitations in the data 
+
+ses_select_filt <- ses_select |>
+  filter(!is.na(totpop13_17) & totpop13_17 != 0)
+
+miss_again_4 <- any(is.na(ses_select_filt)) #check for missing values
+
+rows_with_missing_5 <- ses_select_filt[!complete.cases(ses_select_filt), ]
+
+#some rows have no education information. We don't need these. 
+
+cleaned_ses <- na.omit(ses_select_filt)
+
+miss_again_5 <- any(is.na(cleaned_ses))
+```
+
+
+```{r}
+#match the state census tracts to census regions to easier sampling
+
+get_census_region_4 <- function(code_4) {
+  census_region_map_4 <- c(
+    "10" = "South", "12" = "South", "13" = "South", "24" = "South", 
+    "37" = "South", "45" = "South", "51" = "South", "54" = "South", 
+    "01" = "South", "21" = "South", "28" = "South", "47" = "South", 
+    "05" = "South", "22" = "South", "40" = "South", "48" = "South", 
+    "09" = "Northeast", "23" = "Northeast", "25" = "Northeast", 
+    "33" = "Northeast", "44" = "Northeast", "50" = "Northeast", 
+    "34" = "Northeast", "36" = "Northeast", "42" = "Northeast", 
+    "17" = "Midwest", "18" = "Midwest", "26" = "Midwest", "39" = "Midwest", 
+    "55" = "Midwest", "19" = "Midwest", "20" = "Midwest", "27" = "Midwest", 
+    "29" = "Midwest", "31" = "Midwest", "38" = "Midwest", "46" = "Midwest", 
+    "04" = "West", "08" = "West", "16" = "West", "30" = "West", 
+    "32" = "West", "35" = "West", "49" = "West", "56" = "West", 
+    "02" = "West", "06" = "West", "15" = "West", "41" = "West", "53" = "West"
+  )
+  
+  region_4 <- census_region_map_4[substr(code_4, 1, 2)]
+  if (is.na(region_4)) {
+    region_4 <- "Unknown"  
+  }
+  
+  return(region_4)
+}
+
+cleaned_ses <- cleaned_ses |>
+  mutate(census_region = sapply(tract_fips10, get_census_region_4))
+
+cleaned_ses <- cleaned_ses |>
+  relocate(census_region, .after = tract_fips10)
+
+unknown_regions_4 <- cleaned_ses |>
+  filter(census_region == "Unknown")
+
+#all of the tract codes are matched to their respective regions. There are 179 unknowns which don't make sense since all of them should have a match. Upon further inspection, the issue is the code begininng with 11. There is no matching state for this. It turns out that this code is for Washington DC which is a federal district and not a state. 
+
+#we will change these unknowns to correspond with "south" to reflect the actual census region that it is a part of 
+
+# Update census_region for census tracts starting with "11" to be "South"
+cleaned_ses$census_region[startsWith(cleaned_ses$tract_fips10, "11")] <- "South"
+
+```
+
+#combine all datasets
+```{r}
+
+community_data <- left_join(art_17_filt, vice_17_filt, by = "tract_fips10") |>
+               left_join(social_orgs_17_filt, by = "tract_fips10") |>
+               left_join(cleaned_ses, by = "tract_fips10")
+
+#check for NA's
+
+test <- any(is.na(community_data))
+
+rows_with_missing_6 <- community_data[!complete.cases(community_data), ]
+
+```
+
+
+
+
 
 
 
