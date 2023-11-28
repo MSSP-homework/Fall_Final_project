@@ -13,7 +13,7 @@ library(tidyverse)
 
 
 #load in dataset 
-```{r}
+```{r setup, include=FALSE}
 art <- read_dta("nanda_artsentrec_tract_2003-2017_01P.dta") #art/entertainment
 ```
 
@@ -146,19 +146,6 @@ unknown_regions <- art_17_filt |>
 # Update census_region for census tracts starting with "11" to be "South"
 art_17_filt$census_region[startsWith(art_17_filt$tract_fips10, "11")] <- "South"
 
-```
-
-
-#taking samples from each census region
-```{r}
-# set.seed(123)  # Setting seed for reproducibility
-# 
-# sampled_art <- art_17_filt |>
-#   group_by(census_region) |>
-#   sample_n(size = 1500, replace = FALSE) |>
-#   ungroup()
-
-#probably pull the samples after everything is matched
 ```
 
 #load in dataset 
@@ -382,22 +369,40 @@ test_2 <- any(is.na(community_data))
 #get rid of duplicate columns
 
 community_data <- community_data |>
-  select(-census_region.y, -year.y, -population.y, -census_region.x.x, -census_region.y.y)
+  select(-census_region.y, -year.y, -population.y, -census_region.x.x, -census_region.y.y, -population, -year, -totpop13_17)
+
+community_data <- community_data |>
+  rename(census_region = census_region.x, year = year.x, population = population.x)
+
 ```
 
-#taking samples from each census region
+#sample proportionately
 ```{r}
- set.seed(123)  # Setting seed for reproducibility
- 
- final_community_data <- community_data |>
-   group_by(census_region) |>
-   sample_n(size = 1500, replace = FALSE) |>
-   ungroup()
+#see how many tracts in each region
+region_count <- community_data |>
+  group_by(census_region)|>
+  count(census_region)
+
+sampling_counts <- data.frame(
+  region = c("Midwest", "Northeast", "South", "West"),
+  count = c(2122, 1677, 3255, 1998) #8 times less than originals
+)
+
+# Perform stratified sampling based on the specified counts for each region
+sampled_community_data <- community_data |>
+  group_by(census_region) |>
+  sample_n(size = sampling_counts$count[match(unique(community_data$census_region), sampling_counts$region)], replace = FALSE)
+
 ```
 
 
+### EDA Begins ###
+need to see which variables are important for analysis through correlation matrix
+
+```{r}
 
 
+```
 
 
 
