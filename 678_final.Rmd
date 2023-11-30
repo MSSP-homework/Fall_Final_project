@@ -21,9 +21,8 @@ art <- read_dta("nanda_artsentrec_tract_2003-2017_01P.dta") #art/entertainment
 ```{r}
 art_17 <- art|>
   filter(year == "2017")|>
-  select(tract_fips10, year, population, count_7111, popden_7111, count_7112, popden_7112, count_712, popden_712,
-         count_51912, popden_51912, count_7131, popden_7131, count_7132, popden_7132, count_7139, popden_7139, count_71394,
-         popden_71394)
+  select(tract_fips10, year, population, popden_7111, popden_7112, popden_712,popden_51912, 
+        popden_7131, popden_7132, popden_7139, popden_71394)
 ```
 
 #check for 0's and handle
@@ -157,7 +156,7 @@ vice <- read_dta("nanda_lqtbcon_tract_2003-2017_01P.dta") #liquor stores/tobacco
 ```{r}
 vice_17 <- vice|>
   filter(year == "2017")|>
-  select(tract_fips10, year, population, count_4453, popden_4453, count_453991, popden_453991)
+  select(tract_fips10, year, population, popden_4453, popden_453991)
 ```
 
 #check for 0's and handle
@@ -222,7 +221,7 @@ social_orgs <- read_dta("nanda_relcivsoc_tract_2003-2017_01P.dta") #social organ
 ```{r}
 social_orgs_17 <- social_orgs|>
   filter(year == "2017")|>
-  select(tract_fips10, year, population, count_8131, popden_8131, count_8134, popden_8134)
+  select(tract_fips10, year, population, popden_8131, popden_8134)
 ```
 
 #check for 0's and handle
@@ -374,34 +373,57 @@ community_data <- community_data |>
 community_data <- community_data |>
   rename(census_region = census_region.x, year = year.x, population = population.x)
 
-```
-
-#sample proportionately
-```{r}
-#see how many tracts in each region
-region_count <- community_data |>
-  group_by(census_region)|>
-  count(census_region)
-
-sampling_counts <- data.frame(
-  region = c("Midwest", "Northeast", "South", "West"),
-  count = c(2122, 1677, 3255, 1998) #8 times less than originals
+ community_data <- community_data |>
+   rename(
+     performing_arts = popden_7111,   
+     spectator_sports_orgs = popden_7112,
+     museums = popden_712,  
+     libraries = popden_51912,  
+     amusement_parks = popden_7131,  
+     casinos = popden_7132,
+     recreation = popden_7139,  
+     fitness = popden_71394,  
+     liquor_store = popden_4453,  
+     tobacco = popden_453991,
+     religious_orgs = popden_8131,   
+     social_orgs = popden_8134,  
+     less_than_hs = ped1_13_17,    
+     hs_some_college = ped2_13_17,    
+     bach_and_higher = ped3_13_17, 
 )
 
-# Perform stratified sampling based on the specified counts for each region
-sampled_community_data <- community_data |>
-  group_by(census_region) |>
-  sample_n(size = sampling_counts$count[match(unique(community_data$census_region), sampling_counts$region)], replace = FALSE)
+```
 
+#sample proportionately might need to sample at all
+```{r}
+# proportions <- table(community_data$census_region) / nrow(community_data) # Calculate proportions
+# 
+# downsize_proportions <- round(proportions * 10000) # Target 10000 total observations
+# 
+# downsample_groups <- function(community_data, target_counts) {
+#   sampled_data <- data.frame()  # Create an empty data frame to store the sampled data
+#   
+#   for (i in 1:length(target_counts)) {  # Loop through each group's target count
+#     group_subset <- subset(community_data, census_region == names(target_counts)[i])  # Subset the data for a specific group
+#     sampled_indices <- sample(1:nrow(group_subset), target_counts[i])  # Randomly sample indices based on the target count
+#     sampled_group <- group_subset[sampled_indices, ]  # Store the sampled group data
+#     
+#     sampled_data <- rbind(sampled_data, sampled_group)  # Append sampled rows to the sampled_data data frame
+#   }
+#   
+#   return(sampled_data)  # Return the final sampled dataset
+# }
+
+# sampled_community_data <- downsample_groups(community_data, downsize_proportions)
 ```
 
 
 ### EDA Begins ###
-need to see which variables are important for analysis through correlation matrix
 
 ```{r}
-
-
+str(community_data)
+summary(community_data)
+cor(community_data)
 ```
 
 
