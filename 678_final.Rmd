@@ -7,7 +7,6 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-install.packages("usmap")
 library(haven)
 library(tidyverse)
 library(ggplot2)
@@ -399,10 +398,9 @@ community_data <- community_data |>
 ```
 
 ```{r}
-com2 <- community_data
 
-help <- community_data[, 17:19] %>%
-  pivot_longer(cols = everything(), 
+community_data <- community_data |>
+  pivot_longer(cols = c(less_than_hs, hs_some_college, bach_and_higher),
                names_to = "education_level", 
                values_to = "pop_proportion")
 
@@ -443,27 +441,27 @@ kable(summary, caption = "Summary of Data")
 
 ```
 
+```{r}
+ test <- community_data |>
+   group_by(education_level)|>
+   summarise(mean_value = mean(pop_proportion), median_value = median(pop_proportion))
+
+# sum_by_category <- community_data %>%
+#   summarize(sum_a = sum(co), sum_b = sum(b), sum_c = sum(c))
+
+ggplot(community_data, aes(x = pop_proportion)) +
+  geom_histogram(bins = 30, fill = "pink", color = "black") +
+  labs(title = "Education", x = "Population Proportion", y = "Number of Neighborhoods")+
+  ylim(0, 15000)
+```
+
 #time to check the variable distributions
 ```{r}
 
-ggplot(community_data, aes(x = less_than_hs)) +
+ggplot(community_data, aes(x = education_level)) +
   geom_histogram(bins = 30, fill = "pink", color = "black") +
   labs(title = "Less than High School Education", x = "Population Proportion", y = "Number of Neighborhoods")+
   ylim(0, 15000)
-```
-```{r}
-#It is skewed so that means that I need to transform it so that it will be normalized and better for analysis
-
-community_data$cubed_less_than_hs <- community_data$less_than_hs^(1/3)
-
-ggplot(community_data, aes(x = cubed_less_than_hs)) +
-  geom_histogram(bins = 30, fill = "pink", color = "black") +
-  labs(title = "Less than High School Education", x = "Population Proportion", y = "Number of Neighborhoods")+
-  ylim(0, 15000)
-
-#should i check for normality now?
-
-qqnorm(community_data$cubed_less_than_hs) #what the hell does this mean
 ```
 
 ```{r}
@@ -472,18 +470,9 @@ ggplot(community_data, aes(x = hs_some_college)) +
   labs(title = "High School and Some College Education", x = "Population Proportion", y = "Number of Neighborhoods")
 #1 neighborhood where all of the residents have a high school degree
 ```
-```{r}
-community_data$sqrt_hs_some_college <- sqrt(community_data$hs_some_college)
-
-ggplot(community_data, aes(x = sqrt_hs_some_college)) +
-  geom_histogram(bins = 30, fill = "orange", color = "black") +
-  labs(title = "Sqrt High School and Some College Education", x = "Population Proportion", y = "Number of Neighborhoods")
-```
 
 ```{r}
-community_data$cubed_bach_and_higher <- community_data$bach_and_higher^(1/3)
-
-ggplot(community_data, aes(cubed_bach_and_higher))+
+ggplot(community_data, aes(bach_and_higher))+
   geom_histogram(bins = 30, fill = "lightblue", color = "black")+
   labs(title = "Bachelor's degree or Higher", x = "Proportion of Population", y = "Number of Neighborhoods")+
   ylim(0,7500)
@@ -502,8 +491,9 @@ ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
   labs(title = "Correlation Heatmap", x = "Variables", y = "Variables") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  
 
-#fitness and recreation are highly correlated. I should decide which to drop. All others are fine. I could see which one has higher correlation with my predictor varibles and then decide by that 
+#fitness and recreation are highly correlated. I should decide which to drop. All others are fine. I could see which one has higher correlation with my predictor variables and then decide by that 
 ```
+
 ```{r}
 #code to get ride of fitness. It is highly correlated with recreation so we will get rid of it because neither one of them seem to be making much of difference,
 
@@ -543,9 +533,7 @@ please <- plot_usmap(community_data, less_than_hs)
 #   theme_minimal()
 ```
 
-
-
-
+#I have absolutely no clue what I am doing 
 
 
 
