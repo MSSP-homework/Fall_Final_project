@@ -7,9 +7,12 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+install.packages("usmap")
 library(haven)
 library(tidyverse)
 library(ggplot2)
+library(knitr)
+library(usmap)
 ```
 
 
@@ -395,6 +398,16 @@ community_data <- community_data |>
 
 ```
 
+```{r}
+com2 <- community_data
+
+help <- community_data[, 17:19] %>%
+  pivot_longer(cols = everything(), 
+               names_to = "education_level", 
+               values_to = "pop_proportion")
+
+```
+
 #sample proportionately might need to sample at all
 ```{r}
 # proportions <- table(community_data$census_region) / nrow(community_data) # Calculate proportions
@@ -423,12 +436,11 @@ community_data <- community_data |>
 #understand data and how I want to model it
 
 ```{r}
-summary(community_data)
-#There is a max of 1 in each of the education columns. Thats odd that there is a census tract where all residents have the same type of education. May need to dig deeper and find out what neighborhood these are. It makes sense that the social infrastructures min is 0 but gosh theres a city with 2000 performing arts centers. Crazy.
+summary <- summary(community_data)
 
-#The median and mean look pretty standard for all variables
+#table that is easier to read
+kable(summary, caption = "Summary of Data")
 
-#maybe I could make a table for this
 ```
 
 #time to check the variable distributions
@@ -436,44 +448,50 @@ summary(community_data)
 
 ggplot(community_data, aes(x = less_than_hs)) +
   geom_histogram(bins = 30, fill = "pink", color = "black") +
-  labs(title = "Less than High School Education", x = "Values", y = "Frequency")
-
-#skewed data and outliers 0 and 1. What this mean
+  labs(title = "Less than High School Education", x = "Population Proportion", y = "Number of Neighborhoods")+
+  ylim(0, 15000)
 ```
 ```{r}
-min_school <- community_data |>
-  filter(less_than_hs == 1.00)
+#It is skewed so that means that I need to transform it so that it will be normalized and better for analysis
+
+community_data$cubed_less_than_hs <- community_data$less_than_hs^(1/3)
+
+ggplot(community_data, aes(x = cubed_less_than_hs)) +
+  geom_histogram(bins = 30, fill = "pink", color = "black") +
+  labs(title = "Less than High School Education", x = "Population Proportion", y = "Number of Neighborhoods")+
+  ylim(0, 15000)
+
+#should i check for normality now?
+
+qqnorm(community_data$cubed_less_than_hs) #what the hell does this mean
 ```
 
 ```{r}
 ggplot(community_data, aes(x = hs_some_college)) + 
   geom_histogram(bins = 30, fill = "orange", color = "black")+
-  labs(title = "High School and Some College Education", x = "Values", y = "Frequency")
+  labs(title = "High School and Some College Education", x = "Population Proportion", y = "Number of Neighborhoods")
+#1 neighborhood where all of the residents have a high school degree
+```
+```{r}
+community_data$sqrt_hs_some_college <- sqrt(community_data$hs_some_college)
+
+ggplot(community_data, aes(x = sqrt_hs_some_college)) +
+  geom_histogram(bins = 30, fill = "orange", color = "black") +
+  labs(title = "Sqrt High School and Some College Education", x = "Population Proportion", y = "Number of Neighborhoods")
 ```
 
 ```{r}
-highschool_outlier <- community_data |>
-  filter(hs_some_college == 1.00)
-```
+community_data$cubed_bach_and_higher <- community_data$bach_and_higher^(1/3)
 
-```{r}
-ggplot(community_data, aes(bach_and_higher))+
+ggplot(community_data, aes(cubed_bach_and_higher))+
   geom_histogram(bins = 30, fill = "lightblue", color = "black")+
-  labs(title = "Bachelor's degree or Higher", x = "Values", y = "frequency")
+  labs(title = "Bachelor's degree or Higher", x = "Proportion of Population", y = "Number of Neighborhoods")+
+  ylim(0,7500)
 ```
-
-```{r}
-college_outlier <- community_data |>
-  filter(bach_and_higher == 1.00)
-```
-
-#my data is skewed and I am not sure what to do with thi information or how it will inform my choice of model. There also seems to be some outliers. How do I investigate them and what should I do with them 
-
-#I don't think I need to do any other bar charts or histograms
 
 #check if predictors correlate
 ```{r}
-subset_data <- community_data[, 5:15]
+subset_data <- community_data[, 5:19]
 
 cor_matrix <- cor(subset_data)
 
@@ -484,11 +502,14 @@ ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
   labs(title = "Correlation Heatmap", x = "Variables", y = "Variables") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  
 
-#fitness and recreation are highly correlated. I should decide which to drop. All others are fine
+#fitness and recreation are highly correlated. I should decide which to drop. All others are fine. I could see which one has higher correlation with my predictor varibles and then decide by that 
 ```
 ```{r}
-#figure out how to see the correlation between the predictor and the targets
+#code to get ride of fitness. It is highly correlated with recreation so we will get rid of it because neither one of them seem to be making much of difference,
 
+#I dont think I need to remove them from the dataset I just don't need to include in my model
+
+#my response variables are correlated. Doesn't this mean I should do MLM
 ```
 
 
@@ -499,7 +520,27 @@ ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
 
 #map of US with education
 ```{r}
+idk <- data.frame
 
+
+please <- plot_usmap(community_data, less_than_hs)
+
+
+# sf_us_states <- st_as_sf(maps::map("state", plot = FALSE, fill = TRUE))
+# eda_multilevel$State <- tolower(eda_multilevel$STATE_NAME)
+#  
+# sf_merged <- merge(sf_us_states, eda_multilevel, by.x = "ID", by.y = "State")
+#  
+#  
+# # Heatmap     
+# ggplot() +
+#   geom_sf(data = sf_merged, aes(fill = topsis_score)) +
+#   scale_fill_gradient(low = "pink", high = "red") +
+#   labs(
+#     title = "Heatmap of Evaluating Results",
+#     fill = "evaluating results"
+#   ) +
+#   theme_minimal()
 ```
 
 
