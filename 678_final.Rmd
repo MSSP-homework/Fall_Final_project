@@ -24,8 +24,8 @@ art <- read_dta("nanda_artsentrec_tract_2003-2017_01P.dta") #art/entertainment
 ```{r}
 art_17 <- art|>
   filter(year == "2017")|>
-  select(tract_fips10, year, population, count_7111, count_7112, count_712, count_51912, 
-        count_7131, count_7132, count_7139, count_71394)
+  select(tract_fips10, year, population, popden_7111, popden_7112, popden_712, popden_51912, 
+        popden_7131, popden_7132, popden_7139, popden_71394)
 ```
 
 #check for 0's and handle
@@ -159,7 +159,7 @@ vice <- read_dta("nanda_lqtbcon_tract_2003-2017_01P.dta") #liquor stores/tobacco
 ```{r}
 vice_17 <- vice|>
   filter(year == "2017")|>
-  select(tract_fips10, year, population, count_4453, count_453991)
+  select(tract_fips10, year, population, popden_4453, popden_453991)
 ```
 
 #check for 0's and handle
@@ -224,7 +224,7 @@ social_orgs <- read_dta("nanda_relcivsoc_tract_2003-2017_01P.dta") #social organ
 ```{r}
 social_orgs_17 <- social_orgs|>
   filter(year == "2017")|>
-  select(tract_fips10, year, population, count_8131, count_8134)
+  select(tract_fips10, year, population, popden_8131, popden_8134)
 ```
 
 #check for 0's and handle
@@ -378,18 +378,18 @@ community_data <- community_data |>
 
  community_data <- community_data |>
    rename(
-     performing_arts = count_7111,   
-     spectator_sports_orgs = count_7112,
-     museums = count_712,  
-     libraries = count_51912,  
-     amusement_parks = count_7131,  
-     casinos = count_7132,
-     recreation = count_7139,  
-     fitness = count_71394,  
-     liquor_store = count_4453,  
-     tobacco = count_453991,
-     religious_orgs = count_8131,   
-     social_orgs = count_8134,  
+     performing_arts = popden_7111,   
+     spectator_sports_orgs = popden_7112,
+     museums = popden_712,  
+     libraries = popden_51912,  
+     amusement_parks = popden_7131,  
+     casinos = popden_7132,
+     recreation = popden_7139,  
+     fitness = popden_71394,  
+     liquor_store = popden_4453,  
+     tobacco = popden_453991,
+     religious_orgs = popden_8131,   
+     social_orgs = popden_8134,  
      less_than_hs = ped1_13_17,    
      hs_some_college = ped2_13_17,    
      bach_and_higher = ped3_13_17, 
@@ -397,12 +397,15 @@ community_data <- community_data |>
 
 ```
 
-```{r}
 
-community_data <- community_data |>
-  pivot_longer(cols = c(less_than_hs, hs_some_college, bach_and_higher),
-               names_to = "education_level", 
-               values_to = "pop_proportion")
+```{r}
+community_data$no_CD <- community_data$less_than_hs + community_data$hs_some_college #add columns together
+
+community_data <- community_data|> #get rid of dupes and rename
+  select(-less_than_hs, -hs_some_college)|>
+  rename(CD = bach_and_higher )
+
+community_data$college_edu <- ifelse(community_data$CD > 0.5, 1, 0)
 
 ```
 
@@ -439,59 +442,76 @@ summary <- summary(community_data)
 #table that is easier to read
 kable(summary, caption = "Summary of Data")
 
+edu_count <- community_data |>
+  group_by(college_edu)|>
+  count()
+
 ```
 
 ```{r}
- test <- community_data |>
-   group_by(education_level)|>
-   summarise(mean_value = mean(pop_proportion), median_value = median(pop_proportion))
-
-# sum_by_category <- community_data %>%
-#   summarize(sum_a = sum(co), sum_b = sum(b), sum_c = sum(c))
-
-ggplot(community_data, aes(x = pop_proportion)) +
-  geom_histogram(bins = 30, fill = "pink", color = "black") +
-  labs(title = "Education", x = "Population Proportion", y = "Number of Neighborhoods")+
-  ylim(0, 15000)
+#  test <- community_data |>
+#    group_by(education_level)|>
+#    summarise(mean_value = mean(pop_proportion), median_value = median(pop_proportion))
+# 
+# # sum_by_category <- community_data %>%
+# #   summarize(sum_a = sum(co), sum_b = sum(b), sum_c = sum(c))
+# 
+# ggplot(community_data, aes(x = pop_proportion)) +
+#   geom_histogram(bins = 30, fill = "pink", color = "black") +
+#   labs(title = "Education", x = "Population Proportion", y = "Number of Neighborhoods")+
+#   ylim(0, 15000)
 ```
 
 #time to check the variable distributions
 ```{r}
 
-ggplot(community_data, aes(x = education_level)) +
-  geom_histogram(bins = 30, fill = "pink", color = "black") +
-  labs(title = "Less than High School Education", x = "Population Proportion", y = "Number of Neighborhoods")+
-  ylim(0, 15000)
+# ggplot(community_data, aes(x = education_level)) +
+#   geom_histogram(bins = 30, fill = "pink", color = "black") +
+#   labs(title = "Less than High School Education", x = "Population Proportion", y = "Number of Neighborhoods")+
+#   ylim(0, 15000)
 ```
 
 ```{r}
-ggplot(community_data, aes(x = hs_some_college)) + 
-  geom_histogram(bins = 30, fill = "orange", color = "black")+
-  labs(title = "High School and Some College Education", x = "Population Proportion", y = "Number of Neighborhoods")
-#1 neighborhood where all of the residents have a high school degree
+# ggplot(community_data, aes(x = hs_some_college)) + 
+#   geom_histogram(bins = 30, fill = "orange", color = "black")+
+#   labs(title = "High School and Some College Education", x = "Population Proportion", y = "Number of Neighborhoods")
+# #1 neighborhood where all of the residents have a high school degree
 ```
 
 ```{r}
-ggplot(community_data, aes(bach_and_higher))+
-  geom_histogram(bins = 30, fill = "lightblue", color = "black")+
-  labs(title = "Bachelor's degree or Higher", x = "Proportion of Population", y = "Number of Neighborhoods")+
-  ylim(0,7500)
+# ggplot(community_data, aes(bach_and_higher))+
+#   geom_histogram(bins = 30, fill = "lightblue", color = "black")+
+#   labs(title = "Bachelor's degree or Higher", x = "Proportion of Population", y = "Number of Neighborhoods")+
+#   ylim(0,7500)
 ```
 
-#check if predictors correlate
+#correlation for college degree
 ```{r}
-subset_data <- community_data[, 5:19]
-
+subset_data <- community_data[, 5:17]
+  
 cor_matrix <- cor(subset_data)
 
 ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
   geom_tile() +
   geom_text(aes(label = round(value, 2)), color = "black") +  
-  scale_fill_gradient(low = "blue", high = "red") +
+  scale_fill_gradient(low = "pink", high = "red") +
+  labs(title = "No College Correlation Heatmap", x = "Variables", y = "Variables") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+```
+#no college degree
+```{r}
+subset_data_2 <- community_data[, 5:18]|>
+  select(-13)
+  
+cor_matrix <- cor(subset_data_2)
+
+ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label = round(value, 2)), color = "black") +  
+  scale_fill_gradient(low = "pink", high = "red") +
   labs(title = "Correlation Heatmap", x = "Variables", y = "Variables") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  
 
-#fitness and recreation are highly correlated. I should decide which to drop. All others are fine. I could see which one has higher correlation with my predictor variables and then decide by that 
 ```
 
 ```{r}
@@ -533,7 +553,6 @@ please <- plot_usmap(community_data, less_than_hs)
 #   theme_minimal()
 ```
 
-#I have absolutely no clue what I am doing 
 
 
 
