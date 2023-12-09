@@ -308,7 +308,7 @@ cleaned_ses <- na.omit(ses_select_filt)
 miss_again_5 <- any(is.na(cleaned_ses))
 ```
 
-
+#make region column
 ```{r}
 
 get_census_region_4 <- function(code_4) {
@@ -370,13 +370,13 @@ test_2 <- any(is.na(community_data))
 
 #get rid of duplicate columns
 
-community_data <- community_data |>
+community_data <- community_data |> 
   select(-census_region.y, -year.y, -population.y, -census_region.x.x, -census_region.y.y, -population, -year, -totpop13_17)
 
 community_data <- community_data |>
   rename(census_region = census_region.x, year = year.x, population = population.x)
 
- community_data <- community_data |>
+ community_data <- community_data |> #rename for understanding
    rename(
      performing_arts = popden_7111,   
      spectator_sports_orgs = popden_7112,
@@ -397,15 +397,50 @@ community_data <- community_data |>
 
 ```
 
+#make states column
+```{r}
+get_state <- function(code_a) {
+  census_state_map <- c(
+    "10" = "Delaware", "12" = "Florida", "13" = "Georgia", "24" = "Maryland", 
+    "37" = "North Carolina", "45" = "South Carolina", "51" = "Virginia", "54" = "West Virginia", 
+    "01" = "Alabama", "21" = "Kentucky", "28" = "Mississippi", "47" = "Tennessee", 
+    "05" = "Arkansas", "22" = "Louisiana", "40" = "Oklahoma", "48" = "Texas", 
+    "09" = "Connecticut", "23" = "Maine", "25" = "Massachusetts", 
+    "33" = "New Hampshire", "44" = "Rhode Island", "50" = "Vermont", 
+    "34" = "New Jersey", "36" = "New York", "42" = "Pennsylvania", 
+    "17" = "Illinois", "18" = "Indiana", "26" = "Michigan", "39" = "Ohio", 
+    "55" = "Wisconsin", "19" = "Iowa", "20" = "Kansas", "27" = "Minnesota", 
+    "29" = "Missouri", "31" = "Nebraska", "38" = "North Dakota", "46" = "South Dakota", 
+    "04" = "Arizona", "08" = "Colorado", "16" = "Idaho", "30" = "Montana", 
+    "32" = "Nevada", "35" = "New Mexico", "49" = "Utah", "56" = "Wyoming", 
+    "02" = "Alaska", "06" = "California", "15" = "Hawaii", "41" = "Oregon", "53" = "Washington", "11" = "DC" #district of columbia
+  )
+
+state <- census_state_map[substr(code_a, 1, 2)]
+  if (is.na(state)) {
+    state <- "Unknown"  
+  }
+  
+  return(state)
+}
+
+community_data <- community_data |>
+  mutate(region = sapply(tract_fips10, get_state))|>
+  relocate(region, .before = year )
+
+```
 
 ```{r}
-community_data$no_CD <- community_data$less_than_hs + community_data$hs_some_college #add columns together
+community_data$no_CD <- community_data$less_than_hs + community_data$hs_some_college #collaspe into no college category
 
 community_data <- community_data|> #get rid of dupes and rename
   select(-less_than_hs, -hs_some_college)|>
   rename(CD = bach_and_higher )
 
-community_data$college_edu <- ifelse(community_data$CD > 0.5, 1, 0)
+community_data$college_edu <- ifelse(community_data$CD > 0.5, 1, 0) #make categorical
+
+# 0 = more than 50% of the neighborhood population has less than a college degree
+# 1 = more than 50% of the neighborhood population has a college degree
 
 ```
 
@@ -432,6 +467,18 @@ community_data$college_edu <- ifelse(community_data$CD > 0.5, 1, 0)
 # sampled_community_data <- downsample_groups(community_data, downsize_proportions)
 ```
 
+#proportion test
+```{r}
+state_proportion <- community_data |>
+  group_by(region, college_edu) |>
+  summarise(count = n()) |>
+  group_by(region) |>
+  mutate(total_state = sum(count)) |>
+  mutate(proportion = count / total_state)
+
+#proportion of college education to no college education in each state
+
+```
 
 ### EDA Begins ###
 #understand data and how I want to model it
@@ -448,46 +495,9 @@ edu_count <- community_data |>
 
 ```
 
+#correlation matrix
 ```{r}
-#  test <- community_data |>
-#    group_by(education_level)|>
-#    summarise(mean_value = mean(pop_proportion), median_value = median(pop_proportion))
-# 
-# # sum_by_category <- community_data %>%
-# #   summarize(sum_a = sum(co), sum_b = sum(b), sum_c = sum(c))
-# 
-# ggplot(community_data, aes(x = pop_proportion)) +
-#   geom_histogram(bins = 30, fill = "pink", color = "black") +
-#   labs(title = "Education", x = "Population Proportion", y = "Number of Neighborhoods")+
-#   ylim(0, 15000)
-```
-
-#time to check the variable distributions
-```{r}
-
-# ggplot(community_data, aes(x = education_level)) +
-#   geom_histogram(bins = 30, fill = "pink", color = "black") +
-#   labs(title = "Less than High School Education", x = "Population Proportion", y = "Number of Neighborhoods")+
-#   ylim(0, 15000)
-```
-
-```{r}
-# ggplot(community_data, aes(x = hs_some_college)) + 
-#   geom_histogram(bins = 30, fill = "orange", color = "black")+
-#   labs(title = "High School and Some College Education", x = "Population Proportion", y = "Number of Neighborhoods")
-# #1 neighborhood where all of the residents have a high school degree
-```
-
-```{r}
-# ggplot(community_data, aes(bach_and_higher))+
-#   geom_histogram(bins = 30, fill = "lightblue", color = "black")+
-#   labs(title = "Bachelor's degree or Higher", x = "Proportion of Population", y = "Number of Neighborhoods")+
-#   ylim(0,7500)
-```
-
-#correlation for college degree
-```{r}
-subset_data <- community_data[, 5:17]
+subset_data <- community_data[, 6:19]
   
 cor_matrix <- cor(subset_data)
 
@@ -495,71 +505,29 @@ ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
   geom_tile() +
   geom_text(aes(label = round(value, 2)), color = "black") +  
   scale_fill_gradient(low = "pink", high = "red") +
-  labs(title = "No College Correlation Heatmap", x = "Variables", y = "Variables") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
-```
-#no college degree
-```{r}
-subset_data_2 <- community_data[, 5:18]|>
-  select(-13)
-  
-cor_matrix <- cor(subset_data_2)
-
-ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
-  geom_tile() +
-  geom_text(aes(label = round(value, 2)), color = "black") +  
-  scale_fill_gradient(low = "pink", high = "red") +
-  labs(title = "Correlation Heatmap", x = "Variables", y = "Variables") +
+  labs(title = "College Correlation Heatmap", x = "Variables", y = "Variables") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  
 
-```
 
-```{r}
-#code to get ride of fitness. It is highly correlated with recreation so we will get rid of it because neither one of them seem to be making much of difference,
-
-#I dont think I need to remove them from the dataset I just don't need to include in my model
-
-#my response variables are correlated. Doesn't this mean I should do MLM
+#CM might be off 
 ```
 
 
-#map of US w/ dots showing the social infrastructure 
-```{r}
-
-```
 
 #map of US with education
 ```{r}
-idk <- data.frame
+
+# plot_usmap(
+#   data = state_proportion, values = "count", lines = "blue"
+# ) + 
+#   scale_fill_continuous(
+#     low = "white", high = "pink", name = "proportion", label = scales::comma
+#   ) + 
+#   labs(title = "US States", subtitle = "placeholder") +
+#   theme(legend.position = "right")
 
 
-please <- plot_usmap(community_data, less_than_hs)
-
-
-# sf_us_states <- st_as_sf(maps::map("state", plot = FALSE, fill = TRUE))
-# eda_multilevel$State <- tolower(eda_multilevel$STATE_NAME)
-#  
-# sf_merged <- merge(sf_us_states, eda_multilevel, by.x = "ID", by.y = "State")
-#  
-#  
-# # Heatmap     
-# ggplot() +
-#   geom_sf(data = sf_merged, aes(fill = topsis_score)) +
-#   scale_fill_gradient(low = "pink", high = "red") +
-#   labs(
-#     title = "Heatmap of Evaluating Results",
-#     fill = "evaluating results"
-#   ) +
-#   theme_minimal()
+##Idk what this is or why this is idk what is going on this frucking sucks dude
 ```
-
-
-
-
-
-
-
-
-
-
+###model building 
 
