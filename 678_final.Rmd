@@ -7,12 +7,19 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#install.packages("caret")
+#install.packages("recipes")
+#install.packages("lme4")
+install.packages("unbalanced")
 library(haven)
 library(tidyverse)
 library(ggplot2)
 library(knitr)
 library(usmap)
+library(caret)
+library(lme4)
 ```
+
 
 
 #load in dataset 
@@ -504,30 +511,294 @@ cor_matrix <- cor(subset_data)
 ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
   geom_tile() +
   geom_text(aes(label = round(value, 2)), color = "black") +  
-  scale_fill_gradient(low = "pink", high = "red") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(title = "College Correlation Heatmap", x = "Variables", y = "Variables") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+```
+
+#dataset w/ new variables of interest
+```{r}
+new_com_data <- community_data|>
+  select(-7, -8, -11, -17)
+
+subset_data_2 <- new_com_data[, 6:15]
+  
+cor_matrix_2 <- cor(subset_data_2)
+
+ggplot(data = reshape2::melt(cor_matrix_2), aes(Var2, Var1, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label = round(value, 2)), color = "black") +  
+  scale_fill_gradient(low = "blue", high = "red") +
   labs(title = "College Correlation Heatmap", x = "Variables", y = "Variables") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  
 
+```
+#predictor variables are no longer correlated with each other. Remove highly correlated predictors to minimize overfitting. The presence of highly correlated predictors might lead to an unstable model solution.
 
-#CM might be off 
+#number of tobacco stores in the US
+```{r}
+tobacco_sum_by_state <- new_com_data |>
+  group_by(region) |>
+  summarise(TotalTobaccoStores = sum(tobacco))|>
+  rename(state = region)
+
+plot_usmap(
+   data = tobacco_sum_by_state, values = "TotalTobaccoStores", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "red", name = "total per 1000", label = scales::comma
+   ) + 
+   labs(title = "Tobacco stores") +
+   theme(legend.position = "right")
+```
+```{r}
+perform_art_sum_by_state <- new_com_data |>
+  group_by(region) |>
+  summarise(total_perform_art = sum(performing_arts))|>
+  rename(state = region)
+
+plot_usmap(
+   data = perform_art_sum_by_state, values = "total_perform_art", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "purple", name = "total per 1000", label = scales::comma
+   ) + 
+   labs(title = "Performing arts") +
+   theme(legend.position = "right")
+
+```
+#Libraries
+```{r}
+lib_sum_by_state <- new_com_data |>
+  group_by(region) |>
+  summarise(total_lib = sum(libraries))|>
+  rename(state = region)
+
+plot_usmap(
+   data = lib_sum_by_state, values = "total_lib", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "purple", name = "total per 1000", label = scales::comma
+   ) + 
+   labs(title = "Libraries") +
+   theme(legend.position = "right")
+```
+#amusement parks
+```{r}
+amuse_sum_by_state <- new_com_data |>
+  group_by(region) |>
+  summarise(total_amuse = sum(amusement_parks))|>
+  rename(state = region)
+
+plot_usmap(
+   data = amuse_sum_by_state, values = "total_amuse", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "purple", name = "total per 1000", label = scales::comma
+   ) + 
+   labs(title = "Amusement parks") +
+   theme(legend.position = "right")
+
+```
+#recreation
+```{r}
+rec_sum_by_state <- new_com_data |>
+  group_by(region) |>
+  summarise(total_rec = sum(recreation))|>
+  rename(state = region)
+
+plot_usmap(
+   data = rec_sum_by_state, values = "total_rec", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "purple", name = "total per 1000", label = scales::comma
+   ) + 
+   labs(title = "Recreation") +
+   theme(legend.position = "right")
+
 ```
 
+#fitness
+```{r}
+fit_sum_by_state <- new_com_data |>
+  group_by(region) |>
+  summarise(total_fit = sum(fitness))|>
+  rename(state = region)
+
+plot_usmap(
+   data = fit_sum_by_state, values = "total_fit", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "purple", name = "total per 1000", label = scales::comma
+   ) + 
+   labs(title = "Fitness centers") +
+   theme(legend.position = "right")
+```
+
+#liquor
+```{r}
+liq_sum_by_state <- new_com_data |>
+  group_by(region) |>
+  summarise(total_liq = sum(liquor_store))|>
+  rename(state = region)
+
+plot_usmap(
+   data = liq_sum_by_state, values = "total_liq", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "purple", name = "total per 1000", label = scales::comma
+   ) + 
+   labs(title = "Liquor stores") +
+   theme(legend.position = "right")
+
+```
+#religious orgs
+```{r}
+relig_sum_by_state <- new_com_data |>
+  group_by(region) |>
+  summarise(total_relig = sum(religious_orgs))|>
+  rename(state = region)
+
+plot_usmap(
+   data = relig_sum_by_state, values = "total_relig", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "purple", name = "total per 1000", label = scales::comma
+   ) + 
+   labs(title = "Religious Orgs") +
+   theme(legend.position = "right")
+
+```
+
+```{r}
+#checking class distribution
+table(new_com_data$college_edu)
+
+ggplot(new_com_data, aes(x = factor(college_edu))) +
+  geom_bar() +
+  labs(title = "Class Distribution of college_edu")
+```
+#state w/ #does not account for the different number of people in each state
+#dont know if data from this website is even accurate
+#education information is the mean of the years 2013-2017 so thats probably not that accurate either
+```{r}
+education_state <- state_proportion|>
+  group_by(state)|>
+  filter(college_edu == "1")
+
+plot_usmap(
+   data = education_state, values = "proportion", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "red", name = "proportion", label = scales::comma
+   ) + 
+   labs(title = "College Education") +
+   theme(legend.position = "right")
+
+#proportion of college degree holders is different by state
+
+```
+
+```{r}
+no_education_state <- state_proportion|>
+  group_by(state)|>
+  filter(college_edu == "0")
+
+plot_usmap(
+   data = no_education_state, values = "proportion", lines = "blue"
+ ) + 
+   scale_fill_continuous(
+     low = "white", high = "pink", name = "proportion", label = scales::comma
+   ) + 
+   labs(title = "No College Education") +
+   theme(legend.position = "right")
 
 
-#map of US with education
+```
+
+###Model building###
+
+#split into test and training
+```{r}
+set.seed(678)
+
+training_samples <- new_com_data$college_edu |>
+  createDataPartition(p = 0.8, list = FALSE)
+
+train_data  <- new_com_data[training_samples, ]
+test_data <- new_com_data[-training_samples, ]
+```
+
+#Null Model
 ```{r}
 
-# plot_usmap(
-#   data = state_proportion, values = "count", lines = "blue"
-# ) + 
-#   scale_fill_continuous(
-#     low = "white", high = "pink", name = "proportion", label = scales::comma
-#   ) + 
-#   labs(title = "US States", subtitle = "placeholder") +
-#   theme(legend.position = "right")
+null <- glm(college_edu ~ 1, train_data, family = binomial)
+
+summary(null)
 
 
-##Idk what this is or why this is idk what is going on this frucking sucks dude
+#comeback to interpret and understand what the numbers mean
 ```
-###model building 
+
+#regular logistic 
+```{r}
+
+# Fit the model
+logistic <- glm (college_edu ~ performing_arts + libraries + amusement_parks 
+                 + recreation 
+                 + fitness 
+                 + liquor_store 
+                 + tobacco
+                 + religious_orgs, 
+                 data = train_data, 
+                 family = binomial(link="logit"))
+
+# Summarize the model
+summary(logistic)
+
+# # Make predictions
+# probs <- logistic |>
+#   predict(test_data, type = "response")
+# 
+# predicted_classes <- ifelse(probs > 0.5, "0", "1")
+# 
+# # Model accuracy
+# mean(predicted_classes == test_data$college_edu)
+
+#I dont know if this is accurate. Need to return to and modify
+
+```
+#try to balance classes
+```{r}
+balance_class_data <- ubUnderSample(new_com_data, college_edu)
+
+```
+#complete pooling
+```{r}
+
+
+```
+
+#no pooling
+```{r}
+
+
+```
+
+#partial pooling
+```{r}
+
+
+```
+
+
+#varying intercept
+```{r}
+
+
+```
+
+
+
+
 
