@@ -149,7 +149,7 @@ art_17_filt <- art_17_filt |>
 unknown_regions <- art_17_filt |>
   filter(census_region == "Unknown")
 
-#all of the tract codes are matched to their respective regions. There are 179 unknowns which don't make sense since all of them should have a match. Upon further inspection, the issue is the code begininng with 11. There is no matching state for this. It turns out that this code is for Washington DC which is a federal district and not a state. 
+#all of the tract codes are matched to their respective regions. There are 179 unknowns which don't make sense since all of them should have a match. Upon further inspection, the issue is the code beginning with 11. There is no matching state for this. It turns out that this code is for Washington DC which is a federal district and not a state. 
 
 #we will change these unknowns to correspond with "south" to reflect the actual census region that it is a part of 
 
@@ -433,11 +433,12 @@ state <- census_state_map[substr(code_a, 1, 2)]
 }
 
 community_data <- community_data |>
-  mutate(region = sapply(tract_fips10, get_state))|>
-  relocate(region, .before = year )
+  mutate(state = sapply(tract_fips10, get_state))|>
+  relocate(state, .before = year )
 
 ```
 
+#collaspe edu levels to no college and college education
 ```{r}
 community_data$no_CD <- community_data$less_than_hs + community_data$hs_some_college #collaspe into no college category
 
@@ -475,12 +476,15 @@ community_data$college_edu <- ifelse(community_data$CD > 0.5, 1, 0) #make catego
 # sampled_community_data <- downsample_groups(community_data, downsize_proportions)
 ```
 
-#proportion test
+### EDA Begins ###
+
+#proportions of no college to college degree by state
 ```{r}
+#collaspe all neighborhood 0 and 1's to represent the education level for the overall state
 state_proportion <- community_data |>
-  group_by(region, college_edu) |>
+  group_by(state, college_edu) |>
   summarise(count = n()) |>
-  group_by(region) |>
+  group_by(state) |>
   mutate(total_state = sum(count)) |>
   mutate(proportion = count / total_state)
 
@@ -488,8 +492,6 @@ state_proportion <- community_data |>
 
 ```
 
-### EDA Begins ###
-#understand data and how I want to model it
 
 ```{r}
 summary <- summary(community_data)
@@ -515,10 +517,14 @@ ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
   scale_fill_gradient(low = "blue", high = "red") +
   labs(title = "College Correlation Heatmap", x = "Variables", y = "Variables") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+
+#there are several variables that are correlated with each other above .70. I will compare them to see which one has a higher correlation with the response variable then decide which one to remove
 ```
+
 
 #dataset w/ new variables of interest
 ```{r}
+#removed social orgs, casinos, museums, and spec sports 
 new_com_data <- community_data|>
   dplyr::select(-7, -8, -11, -17)
 
@@ -662,10 +668,11 @@ plot_usmap(
    theme(legend.position = "right")
 
 ```
-#state w/ #does not account for the different number of people in each state
+#does not account for the different number of people in each state
 #dont know if data from this website is even accurate
 #education information is the mean of the years 2013-2017 so thats probably not that accurate either
 ```{r}
+#map of proportion of residents that have a college degree across the US
 education_state <- state_proportion|>
   group_by(region)|>
   filter(college_edu == "1")|>
@@ -679,9 +686,6 @@ plot_usmap(
    ) + 
    labs(title = "College Education") +
    theme(legend.position = "right")
-
-#proportion of college degree holders is different by state
-
 ```
 
 ```{r}
