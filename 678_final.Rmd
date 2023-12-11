@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages("caret")
 #install.packages("recipes")
 #install.packages("lme4")
-install.packages("unbalanced")
+#install.packages("ROSE")
 library(haven)
 library(tidyverse)
 library(ggplot2)
@@ -18,6 +18,7 @@ library(knitr)
 library(usmap)
 library(caret)
 library(lme4)
+library(ROSE)
 ```
 
 
@@ -31,7 +32,7 @@ art <- read_dta("nanda_artsentrec_tract_2003-2017_01P.dta") #art/entertainment
 ```{r}
 art_17 <- art|>
   filter(year == "2017")|>
-  select(tract_fips10, year, population, popden_7111, popden_7112, popden_712, popden_51912, 
+  dplyr::select(tract_fips10, year, population, popden_7111, popden_7112, popden_712, popden_51912, 
         popden_7131, popden_7132, popden_7139, popden_71394)
 ```
 
@@ -166,7 +167,7 @@ vice <- read_dta("nanda_lqtbcon_tract_2003-2017_01P.dta") #liquor stores/tobacco
 ```{r}
 vice_17 <- vice|>
   filter(year == "2017")|>
-  select(tract_fips10, year, population, popden_4453, popden_453991)
+  dplyr::select(tract_fips10, year, population, popden_4453, popden_453991)
 ```
 
 #check for 0's and handle
@@ -231,7 +232,7 @@ social_orgs <- read_dta("nanda_relcivsoc_tract_2003-2017_01P.dta") #social organ
 ```{r}
 social_orgs_17 <- social_orgs|>
   filter(year == "2017")|>
-  select(tract_fips10, year, population, popden_8131, popden_8134)
+  dplyr::select(tract_fips10, year, population, popden_8131, popden_8134)
 ```
 
 #check for 0's and handle
@@ -293,7 +294,7 @@ ses <- read_dta("nanda_ses_tract_2008-2017_04P.dta") #ses
 
 ```{r}
 ses_select <- ses|>
-  select(tract_fips10, totpop13_17, ped1_13_17, ped2_13_17, ped3_13_17)
+  dplyr::select(tract_fips10, totpop13_17, ped1_13_17, ped2_13_17, ped3_13_17)
 ```
 
 #check for 0's and handle
@@ -378,7 +379,7 @@ test_2 <- any(is.na(community_data))
 #get rid of duplicate columns
 
 community_data <- community_data |> 
-  select(-census_region.y, -year.y, -population.y, -census_region.x.x, -census_region.y.y, -population, -year, -totpop13_17)
+  dplyr::select(-census_region.y, -year.y, -population.y, -census_region.x.x, -census_region.y.y, -population, -year, -totpop13_17)
 
 community_data <- community_data |>
   rename(census_region = census_region.x, year = year.x, population = population.x)
@@ -441,7 +442,7 @@ community_data <- community_data |>
 community_data$no_CD <- community_data$less_than_hs + community_data$hs_some_college #collaspe into no college category
 
 community_data <- community_data|> #get rid of dupes and rename
-  select(-less_than_hs, -hs_some_college)|>
+  dplyr::select(-less_than_hs, -hs_some_college)|>
   rename(CD = bach_and_higher )
 
 community_data$college_edu <- ifelse(community_data$CD > 0.5, 1, 0) #make categorical
@@ -519,7 +520,7 @@ ggplot(data = reshape2::melt(cor_matrix), aes(Var2, Var1, fill = value)) +
 #dataset w/ new variables of interest
 ```{r}
 new_com_data <- community_data|>
-  select(-7, -8, -11, -17)
+  dplyr::select(-7, -8, -11, -17)
 
 subset_data_2 <- new_com_data[, 6:15]
   
@@ -543,8 +544,7 @@ tobacco_sum_by_state <- new_com_data |>
   rename(state = region)
 
 plot_usmap(
-   data = tobacco_sum_by_state, values = "TotalTobaccoStores", lines = "blue"
- ) + 
+   data = tobacco_sum_by_state, values = "TotalTobaccoStores") + 
    scale_fill_continuous(
      low = "white", high = "red", name = "total per 1000", label = scales::comma
    ) + 
@@ -558,8 +558,7 @@ perform_art_sum_by_state <- new_com_data |>
   rename(state = region)
 
 plot_usmap(
-   data = perform_art_sum_by_state, values = "total_perform_art", lines = "blue"
- ) + 
+   data = perform_art_sum_by_state, values = "total_perform_art") + 
    scale_fill_continuous(
      low = "white", high = "purple", name = "total per 1000", label = scales::comma
    ) + 
@@ -575,8 +574,7 @@ lib_sum_by_state <- new_com_data |>
   rename(state = region)
 
 plot_usmap(
-   data = lib_sum_by_state, values = "total_lib", lines = "blue"
- ) + 
+   data = lib_sum_by_state, values = "total_lib") + 
    scale_fill_continuous(
      low = "white", high = "purple", name = "total per 1000", label = scales::comma
    ) + 
@@ -591,8 +589,7 @@ amuse_sum_by_state <- new_com_data |>
   rename(state = region)
 
 plot_usmap(
-   data = amuse_sum_by_state, values = "total_amuse", lines = "blue"
- ) + 
+   data = amuse_sum_by_state, values = "total_amuse") + 
    scale_fill_continuous(
      low = "white", high = "purple", name = "total per 1000", label = scales::comma
    ) + 
@@ -608,8 +605,7 @@ rec_sum_by_state <- new_com_data |>
   rename(state = region)
 
 plot_usmap(
-   data = rec_sum_by_state, values = "total_rec", lines = "blue"
- ) + 
+   data = rec_sum_by_state, values = "total_rec") + 
    scale_fill_continuous(
      low = "white", high = "purple", name = "total per 1000", label = scales::comma
    ) + 
@@ -626,8 +622,7 @@ fit_sum_by_state <- new_com_data |>
   rename(state = region)
 
 plot_usmap(
-   data = fit_sum_by_state, values = "total_fit", lines = "blue"
- ) + 
+   data = fit_sum_by_state, values = "total_fit" ) + 
    scale_fill_continuous(
      low = "white", high = "purple", name = "total per 1000", label = scales::comma
    ) + 
@@ -643,8 +638,7 @@ liq_sum_by_state <- new_com_data |>
   rename(state = region)
 
 plot_usmap(
-   data = liq_sum_by_state, values = "total_liq", lines = "blue"
- ) + 
+   data = liq_sum_by_state, values = "total_liq") + 
    scale_fill_continuous(
      low = "white", high = "purple", name = "total per 1000", label = scales::comma
    ) + 
@@ -660,8 +654,7 @@ relig_sum_by_state <- new_com_data |>
   rename(state = region)
 
 plot_usmap(
-   data = relig_sum_by_state, values = "total_relig", lines = "blue"
- ) + 
+   data = relig_sum_by_state, values = "total_relig") + 
    scale_fill_continuous(
      low = "white", high = "purple", name = "total per 1000", label = scales::comma
    ) + 
@@ -669,22 +662,14 @@ plot_usmap(
    theme(legend.position = "right")
 
 ```
-
-```{r}
-#checking class distribution
-table(new_com_data$college_edu)
-
-ggplot(new_com_data, aes(x = factor(college_edu))) +
-  geom_bar() +
-  labs(title = "Class Distribution of college_edu")
-```
 #state w/ #does not account for the different number of people in each state
 #dont know if data from this website is even accurate
 #education information is the mean of the years 2013-2017 so thats probably not that accurate either
 ```{r}
 education_state <- state_proportion|>
-  group_by(state)|>
-  filter(college_edu == "1")
+  group_by(region)|>
+  filter(college_edu == "1")|>
+  rename(state = region)
 
 plot_usmap(
    data = education_state, values = "proportion", lines = "blue"
@@ -701,8 +686,9 @@ plot_usmap(
 
 ```{r}
 no_education_state <- state_proportion|>
-  group_by(state)|>
-  filter(college_edu == "0")
+  group_by(region)|>
+  filter(college_edu == "0")|>
+  rename(state = region)
 
 plot_usmap(
    data = no_education_state, values = "proportion", lines = "blue"
@@ -718,6 +704,26 @@ plot_usmap(
 
 ###Model building###
 
+```{r}
+#checking class distribution
+table(new_com_data$college_edu)
+
+ggplot(new_com_data, aes(x = factor(college_edu))) +
+  geom_bar() +
+  labs(title = "Class Distribution of college_edu")
+```
+#look for perfect for seperation and get rid of rows with all 0's
+```{r}
+# subset <- new_com_data[ , 6:16]|>
+#   dplyr::select(-9, -10)
+# 
+# all_zeros_rows <- which(rowSums(subset == 0) == ncol(subset))
+# 
+# com_data_filtered <- new_com_data[-all_zeros_rows, ]
+
+#don't need to do this but keep around for safety
+```
+
 #split into test and training
 ```{r}
 set.seed(678)
@@ -729,6 +735,25 @@ train_data  <- new_com_data[training_samples, ]
 test_data <- new_com_data[-training_samples, ]
 ```
 
+#try to fix class imbalance by undersampling and oversampling
+```{r}
+ balanced_train_data <- ovun.sample(college_edu ~  performing_arts + 
+                             libraries + 
+                             amusement_parks + 
+                             recreation + 
+                             fitness + 
+                             liquor_store + 
+                             tobacco +
+                             religious_orgs +
+                             region, 
+                             data = train_data,
+                       method = "both", 
+                       p=0.5, 
+                       N = 57928, 
+                       seed = 678)$data
+ table(balanced_train_data$college_edu)
+```
+
 #Null Model
 ```{r}
 
@@ -736,58 +761,68 @@ null <- glm(college_edu ~ 1, train_data, family = binomial)
 
 summary(null)
 
+predicted_probs <- predict(null, newdata = test_data, type = "response")
+
+predicted_classes <- ifelse(predicted_probs > 0.5, 1, 0)
+actual_classes <- test_data$college_edu
+ 
+# Calculate misclassification error
+misclassification_error <- mean(predicted_classes != actual_classes)
+ 
+print(paste("Misclassification Error:", misclassification_error))
+
 
 #comeback to interpret and understand what the numbers mean
 ```
 
-#regular logistic 
+#got rid of a few predictors because for some reason they were "perfect predictors"?
 ```{r}
-
-# Fit the model
-logistic <- glm (college_edu ~ performing_arts + libraries + amusement_parks 
-                 + recreation 
-                 + fitness 
+logistic <- glm(college_edu ~ libraries 
+                 + amusement_parks
                  + liquor_store 
-                 + tobacco
-                 + religious_orgs, 
+                 + tobacco, 
                  data = train_data, 
                  family = binomial(link="logit"))
-
-# Summarize the model
 summary(logistic)
 
-# # Make predictions
-# probs <- logistic |>
-#   predict(test_data, type = "response")
-# 
-# predicted_classes <- ifelse(probs > 0.5, "0", "1")
-# 
-# # Model accuracy
-# mean(predicted_classes == test_data$college_edu)
+predicted_probs <- predict(logistic, newdata = test_data, type = "response")
 
-#I dont know if this is accurate. Need to return to and modify
-
-```
-#try to balance classes
-```{r}
-balance_class_data <- ubUnderSample(new_com_data, college_edu)
-
-```
-#complete pooling
-```{r}
-
+predicted_classes <- ifelse(predicted_probs > 0.5, 1, 0)
+actual_classes <- test_data$college_edu
+ 
+# Calculate misclassification error
+misclassification_error <- mean(predicted_classes != actual_classes)
+ 
+print(paste("Misclassification Error:", misclassification_error))
 
 ```
 
 #no pooling
 ```{r}
+logistic <- glm(college_edu ~ + libraries 
+                 + amusement_parks
+                 + liquor_store 
+                 + tobacco, 
+                 data = train_data, 
+                 family = binomial(link="logit"))
 
-
+ no_pooling <- lm(college_edu ~ group)
 ```
 
 #partial pooling
 ```{r}
 
+train_data <- train_data |>
+  rename(state = region)
+
+partial_pooling <- glmer(college_edu ~ libraries 
+                 + amusement_parks
+                 + liquor_store 
+                 + tobacco 
+                 +(1 | state),
+                 data = train_data,
+                 family = binomial(link = "logit"))
+                         
 
 ```
 
@@ -798,6 +833,14 @@ balance_class_data <- ubUnderSample(new_com_data, college_edu)
 
 ```
 
+
+```{r}
+                                  # needed for partial-pooling
+group <- gl(2, 50, labels = c("Ctl","Trt"))     # group indicator
+    y <- c(Ctl = rnorm(50), Trt = rnorm(50, 1)) # dependent variable
+
+
+```
 
 
 
