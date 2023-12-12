@@ -720,34 +720,42 @@ ggplot(new_com_data, aes(x = factor(college_edu))) +
  train_data  <- new_com_data[training_samples, ]
  test_data <- new_com_data[-training_samples, ]
 
-#dont need to do this according to Ftios
 ```
 
 #try to fix class imbalance by undersampling and oversampling
 ```{r}
- balanced_com_data <- ovun.sample(college_edu ~  performing_arts + 
-                             libraries + 
-                             amusement_parks + 
-                             recreation + 
-                             fitness + 
-                             liquor_store + 
-                             tobacco +
-                             religious_orgs +
-                             state, 
-                             data = new_com_data,
-                       method = "both", 
-                       p=0.5, 
-                       N = 72418, 
-                       seed = 678)$data
- table(balanced_com_data$college_edu)
+ # balanced_train_data <- ovun.sample(college_edu ~  performing_arts + 
+ #                             libraries + 
+ #                             amusement_parks + 
+ #                             recreation + 
+ #                             fitness + 
+ #                             liquor_store + 
+ #                             tobacco +
+ #                             religious_orgs +
+ #                             state, 
+ #                             data = train_data,
+ #                       method = "both", 
+ #                       p=0.5, 
+ #                       N = 57928, 
+ #                       seed = 678)$data
+ # table(balanced_train_data$college_edu)
 ```
 
 #Null Model
 ```{r}
 
-null <- glm(college_edu ~ 1, balanced_com_data, family = binomial)
+null <- glm(college_edu ~ 1, train_data, family = binomial)
 
 summary(null)
+
+predicted_probs_1 <- predict(null, newdata = test_data, type = "response")
+predicted_classes_1 <- ifelse(predicted_probs_1 > 0.5, 1, 0)
+actual_classes_1 <- test_data$college_edu
+ 
+# Calculate misclassification error
+misclassification_error_1 <- mean(predicted_classes_1 != actual_classes_1)
+ 
+print(paste("Misclassification Error:", misclassification_error_1))
 
 ```
 
@@ -757,39 +765,82 @@ complete_pooling <- glm(college_edu ~ libraries
                  + amusement_parks
                  + liquor_store 
                  + tobacco, 
-                 data = balanced_com_data, 
+                 data = train_data, 
                  family = binomial(link="logit"))
 
 summary(complete_pooling)
+
+predicted_probs_2 <- predict(null, newdata = test_data, type = "response")
+predicted_classes_2 <- ifelse(predicted_probs_2 > 0.5, 1, 0)
+actual_classes_2 <- test_data$college_edu
+ 
+# Calculate misclassification error
+misclassification_error_2 <- mean(predicted_classes_2 != actual_classes_2)
+ 
+print(paste("Misclassification Error:", misclassification_error_2))
+
 ```
 
 #no pooling
 ```{r}
 no_pooling <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + (1 | state), 
-                          data = balanced_com_data, 
+                          data = train_data, 
                           family = binomial(link = "logit"))
 
 summary(no_pooling, corr = FALSE)
+
+predicted_probs_3 <- predict(null, newdata = test_data, type = "response")
+predicted_classes_3 <- ifelse(predicted_probs_3 > 0.5, 1, 0)
+actual_classes_3 <- test_data$college_edu
+ 
+# Calculate misclassification error
+misclassification_error_3 <- mean(predicted_classes_3 != actual_classes_3)
+ 
+print(paste("Misclassification Error:", misclassification_error_3))
 ```
 
 #partial pooling
 ```{r}
 
-partial_pooling <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + 
-                           (1 + libraries + amusement_parks + liquor_store + tobacco | state), 
-                               data = balanced_com_data, 
-                               family = binomial(link = "logit"))
+partial_pooling <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + (1 + libraries + amusement_parks + liquor_store + tobacco | state), 
+                               data = train_data, 
+                               family = binomial(link = "logit"),
+                         nAGQ = 20)
 
 summary(partial_pooling, corr = FALSE)
+
+predicted_probs_4 <- predict(null, newdata = test_data, type = "response")
+predicted_classes_4 <- ifelse(predicted_probs_4 > 0.5, 1, 0)
+actual_classes_4 <- test_data$college_edu
+ 
+# Calculate misclassification error
+misclassification_error_4 <- mean(predicted_classes_4 != actual_classes_4)
+ 
+print(paste("Misclassification Error:", misclassification_error_4))
+```
 
 ```
 
 #varying slope model
 ```{r}
-slope_vary <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + (libraries + amusement_parks + liquor_store + tobacco | schid), data=mlmdata)
-summary(model)
+<!-- slope_vary <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco +  -->
+<!--                       (libraries + amusement_parks + liquor_store + tobacco | state),  -->
+<!--                     data = train_data, -->
+<!--                     family = binomial(link = "logit")) -->
 
+<!-- summary(slope_vary) -->
+
+<!-- predicted_probs_5 <- predict(null, newdata = test_data, type = "response") -->
+<!-- predicted_classes_5 <- ifelse(predicted_probs_5 > 0.5, 1, 0) -->
+<!-- actual_classes_5 <- test_data$college_edu -->
+
+<!-- # Calculate misclassification error -->
+<!-- misclassification_error_5 <- mean(predicted_classes_4 != actual_classes_5) -->
+
+<!-- print(paste("Misclassification Error:", misclassification_error_5)) -->
 ```
+
+
 
 
 
