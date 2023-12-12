@@ -545,9 +545,8 @@ ggplot(data = reshape2::melt(cor_matrix_2), aes(Var2, Var1, fill = value)) +
 #number of tobacco stores in the US
 ```{r}
 tobacco_sum_by_state <- new_com_data |>
-  group_by(region) |>
-  summarise(TotalTobaccoStores = sum(tobacco))|>
-  rename(state = region)
+  group_by(state) |>
+  summarise(TotalTobaccoStores = sum(tobacco))
 
 plot_usmap(
    data = tobacco_sum_by_state, values = "TotalTobaccoStores") + 
@@ -559,10 +558,9 @@ plot_usmap(
 ```
 ```{r}
 perform_art_sum_by_state <- new_com_data |>
-  group_by(region) |>
-  summarise(total_perform_art = sum(performing_arts))|>
-  rename(state = region)
-
+  group_by(state) |>
+  summarise(total_perform_art = sum(performing_arts))
+  
 plot_usmap(
    data = perform_art_sum_by_state, values = "total_perform_art") + 
    scale_fill_continuous(
@@ -575,9 +573,9 @@ plot_usmap(
 #Libraries
 ```{r}
 lib_sum_by_state <- new_com_data |>
-  group_by(region) |>
-  summarise(total_lib = sum(libraries))|>
-  rename(state = region)
+  group_by(state) |>
+  summarise(total_lib = sum(libraries))
+  
 
 plot_usmap(
    data = lib_sum_by_state, values = "total_lib") + 
@@ -590,9 +588,9 @@ plot_usmap(
 #amusement parks
 ```{r}
 amuse_sum_by_state <- new_com_data |>
-  group_by(region) |>
-  summarise(total_amuse = sum(amusement_parks))|>
-  rename(state = region)
+  group_by(state) |>
+  summarise(total_amuse = sum(amusement_parks))
+
 
 plot_usmap(
    data = amuse_sum_by_state, values = "total_amuse") + 
@@ -606,9 +604,9 @@ plot_usmap(
 #recreation
 ```{r}
 rec_sum_by_state <- new_com_data |>
-  group_by(region) |>
-  summarise(total_rec = sum(recreation))|>
-  rename(state = region)
+  group_by(state) |>
+  summarise(total_rec = sum(recreation))
+ 
 
 plot_usmap(
    data = rec_sum_by_state, values = "total_rec") + 
@@ -623,9 +621,9 @@ plot_usmap(
 #fitness
 ```{r}
 fit_sum_by_state <- new_com_data |>
-  group_by(region) |>
-  summarise(total_fit = sum(fitness))|>
-  rename(state = region)
+  group_by(state) |>
+  summarise(total_fit = sum(fitness))
+ 
 
 plot_usmap(
    data = fit_sum_by_state, values = "total_fit" ) + 
@@ -639,9 +637,8 @@ plot_usmap(
 #liquor
 ```{r}
 liq_sum_by_state <- new_com_data |>
-  group_by(region) |>
-  summarise(total_liq = sum(liquor_store))|>
-  rename(state = region)
+  group_by(state) |>
+  summarise(total_liq = sum(liquor_store))
 
 plot_usmap(
    data = liq_sum_by_state, values = "total_liq") + 
@@ -655,9 +652,8 @@ plot_usmap(
 #religious orgs
 ```{r}
 relig_sum_by_state <- new_com_data |>
-  group_by(region) |>
-  summarise(total_relig = sum(religious_orgs))|>
-  rename(state = region)
+  group_by(state) |>
+  summarise(total_relig = sum(religious_orgs))
 
 plot_usmap(
    data = relig_sum_by_state, values = "total_relig") + 
@@ -674,13 +670,11 @@ plot_usmap(
 ```{r}
 #map of proportion of residents that have a college degree across the US
 education_state <- state_proportion|>
-  group_by(region)|>
-  filter(college_edu == "1")|>
-  rename(state = region)
+  group_by(state)|>
+  filter(college_edu == "1")
 
 plot_usmap(
-   data = education_state, values = "proportion", lines = "blue"
- ) + 
+   data = education_state, values = "proportion") + 
    scale_fill_continuous(
      low = "white", high = "red", name = "proportion", label = scales::comma
    ) + 
@@ -690,15 +684,14 @@ plot_usmap(
 
 ```{r}
 no_education_state <- state_proportion|>
-  group_by(region)|>
-  filter(college_edu == "0")|>
-  rename(state = region)
+  group_by(state)|>
+  filter(college_edu == "0")
 
 plot_usmap(
    data = no_education_state, values = "proportion", lines = "blue"
  ) + 
    scale_fill_continuous(
-     low = "white", high = "pink", name = "proportion", label = scales::comma
+     low = "white", high = "purple", name = "proportion", label = scales::comma
    ) + 
    labs(title = "No College Education") +
    theme(legend.position = "right")
@@ -716,32 +709,23 @@ ggplot(new_com_data, aes(x = factor(college_edu))) +
   geom_bar() +
   labs(title = "Class Distribution of college_edu")
 ```
-#look for perfect for seperation and get rid of rows with all 0's
-```{r}
-# subset <- new_com_data[ , 6:16]|>
-#   dplyr::select(-9, -10)
-# 
-# all_zeros_rows <- which(rowSums(subset == 0) == ncol(subset))
-# 
-# com_data_filtered <- new_com_data[-all_zeros_rows, ]
-
-#don't need to do this but keep around for safety
-```
 
 #split into test and training
 ```{r}
-set.seed(678)
+ set.seed(678)
+ 
+ training_samples <- new_com_data$college_edu |>
+   createDataPartition(p = 0.8, list = FALSE)
+ 
+ train_data  <- new_com_data[training_samples, ]
+ test_data <- new_com_data[-training_samples, ]
 
-training_samples <- new_com_data$college_edu |>
-  createDataPartition(p = 0.8, list = FALSE)
-
-train_data  <- new_com_data[training_samples, ]
-test_data <- new_com_data[-training_samples, ]
+#dont need to do this according to Ftios
 ```
 
 #try to fix class imbalance by undersampling and oversampling
 ```{r}
- balanced_train_data <- ovun.sample(college_edu ~  performing_arts + 
+ balanced_com_data <- ovun.sample(college_edu ~  performing_arts + 
                              libraries + 
                              amusement_parks + 
                              recreation + 
@@ -749,103 +733,63 @@ test_data <- new_com_data[-training_samples, ]
                              liquor_store + 
                              tobacco +
                              religious_orgs +
-                             region, 
-                             data = train_data,
+                             state, 
+                             data = new_com_data,
                        method = "both", 
                        p=0.5, 
-                       N = 57928, 
+                       N = 72418, 
                        seed = 678)$data
- table(balanced_train_data$college_edu)
+ table(balanced_com_data$college_edu)
 ```
 
 #Null Model
 ```{r}
 
-null <- glm(college_edu ~ 1, train_data, family = binomial)
+null <- glm(college_edu ~ 1, balanced_com_data, family = binomial)
 
 summary(null)
 
-predicted_probs <- predict(null, newdata = test_data, type = "response")
-
-predicted_classes <- ifelse(predicted_probs > 0.5, 1, 0)
-actual_classes <- test_data$college_edu
- 
-# Calculate misclassification error
-misclassification_error <- mean(predicted_classes != actual_classes)
- 
-print(paste("Misclassification Error:", misclassification_error))
-
-
-#comeback to interpret and understand what the numbers mean
 ```
 
 #got rid of a few predictors because for some reason they were "perfect predictors"?
 ```{r}
-logistic <- glm(college_edu ~ libraries 
+complete_pooling <- glm(college_edu ~ libraries 
                  + amusement_parks
                  + liquor_store 
                  + tobacco, 
-                 data = train_data, 
+                 data = balanced_com_data, 
                  family = binomial(link="logit"))
-summary(logistic)
 
-predicted_probs <- predict(logistic, newdata = test_data, type = "response")
-
-predicted_classes <- ifelse(predicted_probs > 0.5, 1, 0)
-actual_classes <- test_data$college_edu
- 
-# Calculate misclassification error
-misclassification_error <- mean(predicted_classes != actual_classes)
- 
-print(paste("Misclassification Error:", misclassification_error))
-
+summary(complete_pooling)
 ```
 
 #no pooling
 ```{r}
-logistic <- glm(college_edu ~ + libraries 
-                 + amusement_parks
-                 + liquor_store 
-                 + tobacco, 
-                 data = train_data, 
-                 family = binomial(link="logit"))
+no_pooling <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + (1 | state), 
+                          data = balanced_com_data, 
+                          family = binomial(link = "logit"))
 
- no_pooling <- lm(college_edu ~ group)
+summary(no_pooling, corr = FALSE)
 ```
 
 #partial pooling
 ```{r}
 
-train_data <- train_data |>
-  rename(state = region)
+partial_pooling <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + 
+                           (1 + libraries + amusement_parks + liquor_store + tobacco | state), 
+                               data = balanced_com_data, 
+                               family = binomial(link = "logit"))
 
-partial_pooling <- glmer(college_edu ~ libraries 
-                 + amusement_parks
-                 + liquor_store 
-                 + tobacco 
-                 +(1 | state),
-                 data = train_data,
-                 family = binomial(link = "logit"))
-                         
+summary(partial_pooling, corr = FALSE)
 
 ```
 
-
-#varying intercept
+#varying slope model
 ```{r}
-
-
-```
-
-
-```{r}
-                                  # needed for partial-pooling
-group <- gl(2, 50, labels = c("Ctl","Trt"))     # group indicator
-    y <- c(Ctl = rnorm(50), Trt = rnorm(50, 1)) # dependent variable
-
+slope_vary <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + (libraries + amusement_parks + liquor_store + tobacco | schid), data=mlmdata)
+summary(model)
 
 ```
-
 
 
 
