@@ -709,36 +709,35 @@ ggplot(new_com_data, aes(x = factor(college_edu))) +
   geom_bar() +
   labs(title = "Class Distribution of college_edu")
 ```
+#try to fix class imbalance by undersampling and oversampling
+```{r}
+  balanced_com_data <- ovun.sample(college_edu ~ performing_arts + 
+                              libraries + 
+                              amusement_parks + 
+                              recreation + 
+                              fitness + 
+                              liquor_store + 
+                              tobacco +
+                              religious_orgs +
+                              state, 
+                              data = new_com_data,
+                              method = "both", 
+                              N = 72410,
+                              seed = 678)$data
+
+  table(balanced_com_data$college_edu)
+```
 
 #split into test and training
 ```{r}
  set.seed(678)
  
- training_samples <- new_com_data$college_edu |>
+ training_samples <- balanced_com_data$college_edu |>
    createDataPartition(p = 0.8, list = FALSE)
  
- train_data  <- new_com_data[training_samples, ]
- test_data <- new_com_data[-training_samples, ]
+ train_data  <- balanced_com_data[training_samples, ]
+ test_data <- balanced_com_data[-training_samples, ]
 
-```
-
-#try to fix class imbalance by undersampling and oversampling
-```{r}
- # balanced_train_data <- ovun.sample(college_edu ~  performing_arts + 
- #                             libraries + 
- #                             amusement_parks + 
- #                             recreation + 
- #                             fitness + 
- #                             liquor_store + 
- #                             tobacco +
- #                             religious_orgs +
- #                             state, 
- #                             data = train_data,
- #                       method = "both", 
- #                       p=0.5, 
- #                       N = 57928, 
- #                       seed = 678)$data
- # table(balanced_train_data$college_edu)
 ```
 
 #Null Model
@@ -761,10 +760,14 @@ print(paste("Misclassification Error:", misclassification_error_1))
 
 #got rid of a few predictors because for some reason they were "perfect predictors"?
 ```{r}
-complete_pooling <- glm(college_edu ~ libraries 
-                 + amusement_parks
-                 + liquor_store 
-                 + tobacco, 
+complete_pooling <- glm(college_edu ~ performing_arts + 
+                              libraries + 
+                              amusement_parks + 
+                              recreation + 
+                              fitness + 
+                              liquor_store + 
+                              tobacco +
+                              religious_orgs,
                  data = train_data, 
                  family = binomial(link="logit"))
 
@@ -783,11 +786,22 @@ print(paste("Misclassification Error:", misclassification_error_2))
 
 #no pooling
 ```{r}
-no_pooling <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + (1 | state), 
+no_pooling <- glm(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + factor(state),
                           data = train_data, 
                           family = binomial(link = "logit"))
 
 summary(no_pooling, corr = FALSE)
+```
+
+
+#partial pooling
+```{r}
+#varying slope
+partial_pooling <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + (1 | state), 
+                          data = train_data, 
+                          family = binomial(link = "logit"))
+
+summary(partial_pooling, corr = FALSE)
 
 predicted_probs_3 <- predict(null, newdata = test_data, type = "response")
 predicted_classes_3 <- ifelse(predicted_probs_3 > 0.5, 1, 0)
@@ -801,11 +815,11 @@ print(paste("Misclassification Error:", misclassification_error_3))
 
 #partial pooling
 ```{r}
-
-partial_pooling <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + (1 + libraries + amusement_parks + liquor_store + tobacco | state), 
+#varying intercept varying slope
+partial_pooling_2 <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco + (1 + libraries | state) + (1 + amusement_parks | state) + (1 + liquor_store | state) + (1 + tobacco | state), 
                                data = train_data, 
-                               family = binomial(link = "logit"),
-                         nAGQ = 20)
+                               family = binomial(link = "logit"))
+                         
 
 summary(partial_pooling, corr = FALSE)
 
@@ -819,26 +833,7 @@ misclassification_error_4 <- mean(predicted_classes_4 != actual_classes_4)
 print(paste("Misclassification Error:", misclassification_error_4))
 ```
 
-```
 
-#varying slope model
-```{r}
-<!-- slope_vary <- glmer(college_edu ~ libraries + amusement_parks + liquor_store + tobacco +  -->
-<!--                       (libraries + amusement_parks + liquor_store + tobacco | state),  -->
-<!--                     data = train_data, -->
-<!--                     family = binomial(link = "logit")) -->
-
-<!-- summary(slope_vary) -->
-
-<!-- predicted_probs_5 <- predict(null, newdata = test_data, type = "response") -->
-<!-- predicted_classes_5 <- ifelse(predicted_probs_5 > 0.5, 1, 0) -->
-<!-- actual_classes_5 <- test_data$college_edu -->
-
-<!-- # Calculate misclassification error -->
-<!-- misclassification_error_5 <- mean(predicted_classes_4 != actual_classes_5) -->
-
-<!-- print(paste("Misclassification Error:", misclassification_error_5)) -->
-```
 
 
 
