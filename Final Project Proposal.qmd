@@ -35,7 +35,7 @@ Arts, Entertainment, and Recreation Organizations by Census Tract, United States
 
 Related publication/ Literature review
 
--   Melendez, Robert, Philippa Clarke, Anam Khan, Iris Gomez-Lopez, Mao Li, and Megan Chenoweth. \"National Neighborhood Data Archive (NaNDA): Socioeconomic Status and Demographic Characteristics of Census Tracts, United States, 2008-2017.\" *ICPSR - Interuniversity Consortium for Political and Social Research*, 2020. https://doi.org/10.3886/E119451V1.
+-   Melendez, Robert, Philippa Clarke, Anam Khan, Iris Gomez-Lopez, Mao Li, and Megan Chenoweth. "National Neighborhood Data Archive (NaNDA): Socioeconomic Status and Demographic Characteristics of Census Tracts, United States, 2008-2017." *ICPSR - Interuniversity Consortium for Political and Social Research*, 2020. https://doi.org/10.3886/E119451V1.
 
 #### Dataset 2
 
@@ -43,7 +43,7 @@ Liquor, Tobacco, and Convenience Stores by Census Tract, United States, 2003-201
 
 [*http://doi.org/10.3886/E123541V1*](http://doi.org/10.3886/E123541V1)
 
--   Finlay, Jessica, Mao Li, Michael Esposito, Iris Gomez-Lopez, Anam Khan, Philippa Clarke, and Megan Chenoweth. \"National Neighborhood Data Archive (NaNDA): Liquor, Tobacco, and Convenience Stores by ZIP Code Tabulation Area, United States, 2003-2017.\" *ICPSR - Interuniversity Consortium for Political and Social Research*, 2020. https://doi.org/10.3886/E123542V1.
+-   Finlay, Jessica, Mao Li, Michael Esposito, Iris Gomez-Lopez, Anam Khan, Philippa Clarke, and Megan Chenoweth. "National Neighborhood Data Archive (NaNDA): Liquor, Tobacco, and Convenience Stores by ZIP Code Tabulation Area, United States, 2003-2017." *ICPSR - Interuniversity Consortium for Political and Social Research*, 2020. https://doi.org/10.3886/E123542V1.
 
 #### Dataset 3
 
@@ -53,17 +53,17 @@ School Counts by Census Tract, United States, 2000-2018
 
 Related publication/ Literature review
 
--   National Center for Education Statistics. \"Common Core of Data, School-Level Database. Education Data Portal (Version 0.9.0).\" Urban Institute, 2020. https://educationdata.urban.org/documentation/schools.html.
+-   National Center for Education Statistics. "Common Core of Data, School-Level Database. Education Data Portal (Version 0.9.0)." Urban Institute, 2020. https://educationdata.urban.org/documentation/schools.html.
 
 #### Dataset 4
 
 Socioeconomic Status and Demographic Characteristics of Census Tracts, United States, 2008-2017
 
-*<http://doi.org/10.3886/E119451V2>.*
+[*http://doi.org/10.3886/E119451V2*](http://doi.org/10.3886/E119451V2){.uri}*.*
 
 Related publication/ Literature review
 
--   Melendez, Robert, Philippa Clarke, Anam Khan, Iris Gomez-Lopez, Mao Li, and Megan Chenoweth. \"National Neighborhood Data Archive (NaNDA): Socioeconomic Status and Demographic Characteristics of ZIP Code Tabulation Areas, United States, 2008-2017.\" *ICPSR - Interuniversity Consortium for Political and Social Research*, 2020. https://doi.org/10.3886/E120462V1.
+-   Melendez, Robert, Philippa Clarke, Anam Khan, Iris Gomez-Lopez, Mao Li, and Megan Chenoweth. "National Neighborhood Data Archive (NaNDA): Socioeconomic Status and Demographic Characteristics of ZIP Code Tabulation Areas, United States, 2008-2017." *ICPSR - Interuniversity Consortium for Political and Social Research*, 2020. https://doi.org/10.3886/E120462V1.
 
 \*\*The data sets will be joined by matching census tracts FIP codes and filtered for communities and years of interest (to be determined).
 

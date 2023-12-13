@@ -1,5 +1,5 @@
 ---
-title: "test"
+title: "Supplemental Code"
 author: "Amie Thomas"
 date: "2023-11-13"
 output: html_document
@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages("recipes")
 #install.packages("lme4")
 #install.packages("ROSE")
+#install.packages("MLmetrics")
 library(haven)
 library(tidyverse)
 library(ggplot2)
@@ -19,6 +20,7 @@ library(usmap)
 library(caret)
 library(lme4)
 library(ROSE)
+library(MLmetrics)
 ```
 
 
@@ -747,15 +749,14 @@ null <- glm(college_edu ~ 1, train_data, family = binomial)
 
 summary(null)
 
+#misclassification error
 predicted_probs_1 <- predict(null, newdata = test_data, type = "response")
 predicted_classes_1 <- ifelse(predicted_probs_1 > 0.5, 1, 0)
 actual_classes_1 <- test_data$college_edu
  
-# Calculate misclassification error
 misclassification_error_1 <- mean(predicted_classes_1 != actual_classes_1)
  
 print(paste("Misclassification Error:", misclassification_error_1))
-
 ```
 
 #got rid of a few predictors because for some reason they were "perfect predictors"?
@@ -782,6 +783,9 @@ misclassification_error_2 <- mean(predicted_classes_2 != actual_classes_2)
  
 print(paste("Misclassification Error:", misclassification_error_2))
 
+#f1 score
+f1_score_2 <- F1_Score(y_pred = predicted_classes_2, y_true = test_data$college_edu)
+print(f1_score_2)
 ```
 
 #no pooling
@@ -796,10 +800,13 @@ predicted_probs_3 <- predict(no_pooling, newdata = test_data, type = "response")
 predicted_classes_3 <- ifelse(predicted_probs_3 > 0.5, 1, 0)
 actual_classes_3 <- test_data$college_edu
  
-# Calculate misclassification error
 misclassification_error_3 <- mean(predicted_classes_3 != actual_classes_3)
  
 print(paste("Misclassification Error:", misclassification_error_3))
+
+#f1 score
+f1_score_3 <- F1_Score(y_pred = predicted_classes_3, y_true = test_data$college_edu)
+print(f1_score_3)
 
 ```
 
@@ -821,6 +828,10 @@ actual_classes_4 <- test_data$college_edu
 misclassification_error_4 <- mean(predicted_classes_4 != actual_classes_4)
  
 print(paste("Misclassification Error:", misclassification_error_4))
+
+#f1 score
+f1_score_4 <- F1_Score(y_pred = predicted_classes_4, y_true = test_data$college_edu)
+print(f1_score_4)
 ```
 
 #partial pooling
@@ -843,6 +854,11 @@ actual_classes_5 <- test_data$college_edu
 misclassification_error_5 <- mean(predicted_classes_5 != actual_classes_5)
  
 print(paste("Misclassification Error:", misclassification_error_5))
+
+#f1 score
+#f1 score
+f1_score_5 <- F1_Score(y_pred = predicted_classes_5, y_true = test_data$college_edu)
+print(f1_score_5)
 ```
 
 #partial pooling varying slope
@@ -863,6 +879,10 @@ actual_classes_6 <- test_data$college_edu
 misclassification_error_6 <- mean(predicted_classes_6 != actual_classes_6)
  
 print(paste("Misclassification Error:", misclassification_error_6))
+
+#f1 score
+f1_score_6 <- F1_Score(y_pred = predicted_classes_6, y_true = test_data$college_edu)
+print(f1_score_6)
 
 ```
 
@@ -894,6 +914,23 @@ misclassification_table <- data.frame(Model = model_names, 'Misclassification Er
 missclass_ktable <- kable(misclassification_table, caption = "Misclassification Errors of Models", align = c("l", "c"))
 
 print(missclass_ktable)
+
+
+```
+
+
+
+#table for F1 score.
+```{r}
+model_f1_scores <- c(0.72, 0.59, 0.59, 0.55, 0.55)
+
+model_names <- c("Complete pooling model", "No pooling model", "Partial pooling model vary intercept", "Partial pooling model vary both", "Partial pooling model vary slope")
+
+f1_score_table <- data.frame(Model = model_names, 'F1 Test Scores' = model_f1_scores)
+
+f1_ktable <- kable(f1_score_table, caption = "F1 test scores of Models", align = c("l", "c"))
+
+print(f1_ktable)
 
 
 ```
